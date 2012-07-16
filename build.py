@@ -1,5 +1,5 @@
 targets = [
-    "node_4kp.parts",
+    "node_4kc.parts",
 ]
 
 
