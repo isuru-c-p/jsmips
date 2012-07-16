@@ -133,6 +133,14 @@ function OctetBuffer ( arg ) {
     
     
     this.getSize = function () { return this.size; } ;
+    
+    this.loadHexString  = function ( s, offset ) {
+        for (var i = 0; i < s.length ; i += 2){
+            var b = s.substr(i,2);
+            b = parseInt(b,16);
+            this.putByte(offset + i/2,b);
+        }
+    } 
 
     if (typeof arg === "number"){
         var size = arg;
@@ -153,10 +161,6 @@ function OctetBuffer ( arg ) {
     this.size = size;
     
     if (typeof arg === "string"){
-        for (var i = 0; i < arg.length ; i += 2){
-            var b = arg.substr(i,2);
-            b = parseInt(b,16);
-            this.putByte(i/2,b);
-        }
+        this.loadHexString(arg,0);
     }
 }

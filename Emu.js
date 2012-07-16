@@ -7,9 +7,12 @@ function Emulator() {
     this.mmu = new Mmu(1024*1024*128);
     this.cpu = new MipsCpu();
     
+    this.mmu.cpu = this.cpu;
+    this.cpu.mmu = this.mmu;
+    
     
     this.step = function () {
-        DEBUG("emulator tick")
+        DEBUG("emulator tick");
             
     }
     
