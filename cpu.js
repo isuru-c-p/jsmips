@@ -65,4 +65,25 @@ function MipsCpu () {
     this.genRegisters = new Array(32); // array of 32 32 bit integers
 	this.statusRegister = new StatusRegister();
 	this.configRegister = new ConfigRegister();
+	
+	this.getEndianness = function()
+	{
+		// returns 0 for LE and 1 for BE
+		bigEndian = this.cpu.configRegister.BE;
+		
+		// if in user mode, and RE is set, reverse endianness
+		if((this.cpu.statusRegister.UM == 1) && (this.cpu.statusRegister.RE == 1))
+		{
+			if(bigEndian == 1)
+			{
+				bigEndian = 0;
+			}
+			else
+			{
+				bigEndian = 1;
+			}
+		}
+
+		return bigEndian;
+	}
 }
