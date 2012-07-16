@@ -10,10 +10,6 @@ behave and access memory, this means it requires access to the cpu state.
 
 
 
-function Mmu(cpu,size) {
-
-    this.cpu = cpu
+function Mmu(size) {
     this.physicalMemory = new OctetBuffer(size)
-
-
 }

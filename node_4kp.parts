@@ -1,4 +1,5 @@
 OctetBuffer.js
+node_log.js
 cpu.js
 mmu.js
 Emu.js

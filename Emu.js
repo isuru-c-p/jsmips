@@ -8,5 +8,11 @@ function Emulator() {
     this.cpu = new MipsCpu();
     
     
+    this.step = function () {
+        DEBUG("emulator tick")
+            
+    }
+    
+    
 
 }
