@@ -12,5 +12,5 @@ behave and access memory, this means it requires access to the cpu state.
 
 function Mmu(size) {
     //member cpu , to save space i wont make a setter. its set by the emu object
-    this.physicalMemory = new OctetBuffer(size)    
+    this.physicalMemory = new OctetBuffer(size);
 }
