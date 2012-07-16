@@ -16,9 +16,7 @@ function Mmu(size) {
 	
 	this.readWord = function(address)
 	{
-		bigEndian = this.cpu.getEndianness();
-	
-		if(bigEndian == 0)
+		if(this.cpu.getEndianness() == 0)
 		{
 			return this.physicalMemory.getUInt32LE(address);
 		}
@@ -30,9 +28,7 @@ function Mmu(size) {
 	
 	this.writeWord = function(address, value)
 	{
-		bigEndian = this.cpu.getEndianness();
-	
-		if(bigEndian == 0)
+		if(this.cpu.getEndianness() == 0)
 		{
 			return this.physicalMemory.putUInt32LE(address, value);
 		}
