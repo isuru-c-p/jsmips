@@ -1,6 +1,6 @@
 
 
-function GeneralRegister {
+function GeneralRegister() {
     
     this.val = 0;
     
