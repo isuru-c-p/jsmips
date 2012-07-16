@@ -11,5 +11,5 @@ behave and access memory, this means it requires access to the cpu state.
 
 
 function Mmu(size) {
-    this.physicalMemory = new OctetBuffer(size)
+    this.physicalMemory = new OctetBuffer(size);
 }

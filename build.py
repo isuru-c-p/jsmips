@@ -5,7 +5,7 @@ targets = [
 
 
 def buildFile(partsfile):
-    out = open(partsfile[:-1*len('.path')-1] + ".js" , 'w')
+    out = open(partsfile[:-1*len('.parts')] + ".js" , 'w')
     for fname in open(partsfile):
         fname = fname.strip()
         for num,line in enumerate(open(fname)):
