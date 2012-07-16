@@ -13,4 +13,32 @@ behave and access memory, this means it requires access to the cpu state.
 function Mmu(size) {
     //member cpu , to save space i wont make a setter. its set by the emu object
     this.physicalMemory = new OctetBuffer(size);
+	
+	this.readWord = function(address)
+	{
+		bigEndian = this.cpu.getEndianness();
+	
+		if(bigEndian == 0)
+		{
+			return this.physicalMemory.getUInt32LE(address);
+		}
+		else
+		{
+			return this.physicalMemory.getUInt32BE(address);
+		}
+	}
+	
+	this.writeWord = function(address, value)
+	{
+		bigEndian = this.cpu.getEndianness();
+	
+		if(bigEndian == 0)
+		{
+			return this.physicalMemory.putUInt32LE(address, value);
+		}
+		else
+		{
+			return this.physicalMemory.putUInt32BE(address, value);
+		}	
+	}
 }
