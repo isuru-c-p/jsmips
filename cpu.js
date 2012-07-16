@@ -35,6 +35,27 @@ function StatusRegister() {
 	this.IE = 0; // Interrupt Enable, bit 0
 }
 
+function ConfigRegister()
+{
+	// all fields except K0 are read only
+	this.M = 1; // bit 31
+	this.K23 = 0; // bits 30:28
+	this.KU = 0; // bits 27:25
+	this.ISP = 0; // bit 24
+	this.DSP = 0; // bit 23
+	this.zero = 0; // bit 22
+	this.SB = 0; // bit 21
+	this.MDU = 0; // bit 20
+	// bit 19 same as this.zero
+	this.MM = 0; // bits 18:17
+	this.BM = 0; // bit 16
+	this.BE = 0; // bit 15
+	this.AT = 0; // bits 14:13
+	this.AR = 0; // bits 12:10
+	this.MT = 1; // bits 9:7
+	// bit 6 same as this.zero
+	this.K0 = 2; // bits 2:0
+}
 
 
 function MipsCpu () {
@@ -43,4 +64,5 @@ function MipsCpu () {
     
     this.genRegisters = new Array(32); // array of 32 32 bit integers
 	this.statusRegister = new StatusRegister();
+	this.configRegister = new ConfigRegister();
 }
