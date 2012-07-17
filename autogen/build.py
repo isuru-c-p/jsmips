@@ -34,10 +34,10 @@ class Table(object):
 		
 		for i,op in enumerate(self.ops):
 			noCols = (2 ** (self.ranges[0][1] - self.ranges[0][0]))
-			left = i % noCols
-			top = (i - left)/noCols
+			top = i % noCols
+			left = (i - top)/noCols
 			
-			opcodeCaseValue = (left << self.ranges[0][0]) + (top << self.ranges[1][0])
+			opcodeCaseValue = (left << self.ranges[1][0]) + (top << self.ranges[0][0])
 			
 			if (op in tablesDict.keys()):
 				subswitch = str(tablesDict[op])
