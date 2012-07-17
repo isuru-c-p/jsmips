@@ -1,14 +1,14 @@
 
 
-function GeneralRegister() {
+function GeneralRegister() { // 32 bit register
     
     this.val = 0;
     
-    this.getValue = function () {
+    this.asUInt32 = function () {
         return this.val;
     }
     
-    this.writeValue = function ( val ) {
+    this.putUInt32 = function ( val ) {
         this.val = val;
     }
 
@@ -75,7 +75,7 @@ function ConfigRegister()
 	// bit 19 same as this.zero
 	this.MM = 0; // bits 18:17
 	this.BM = 0; // bit 16
-	this.BE = 0; // bit 15
+	this.BE = 1; // bit 15
 	this.AT = 0; // bits 14:13
 	this.AR = 0; // bits 12:10
 	this.MT = 1; // bits 9:7
@@ -155,14 +155,16 @@ function MipsCpu () {
 	this.config1Register = new Config1Register();
 	this.processorIDRegister = new processorIDRegister();
 	this.llAddrRegister = new LLAddrRegister();
+	this.PC = new GeneralRegister();
+	this.doOp = doOp
 	
 	this.getEndianness = function()
 	{
 		// returns 0 for LE and 1 for BE
-		bigEndian = this.cpu.configRegister.BE;
+		bigEndian = this.configRegister.BE;
 		
 		// if in user mode, and RE is set, reverse endianness
-		if((this.cpu.statusRegister.UM == 1) && (this.cpu.statusRegister.RE == 1))
+		if((this.statusRegister.UM == 1) && (this.statusRegister.RE == 1))
 		{
 			if(bigEndian == 1)
 			{
@@ -176,4 +178,15 @@ function MipsCpu () {
 
 		return bigEndian;
 	}
+	
+	this.step = function () {
+	
+	    var pcVal = this.PC.asUInt32();
+	    DEBUG("Executing instruction at " + pcVal.toString(16));
+	    var ins = this.mmu.readWord(pcVal)
+	    DEBUG("instruction word: " + ins.toString(16));
+	    this.doOp(ins);
+	    
+	}
+	
 }

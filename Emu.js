@@ -13,7 +13,7 @@ function Emulator() {
     
     this.step = function () {
         DEBUG("emulator tick");
-            
+        this.cpu.step();
     }
     
     
