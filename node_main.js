@@ -6,6 +6,9 @@ emu = new Emulator()
 
 DEBUG("loading "+ process.argv[2]);
 emu.mmu.physicalMemory.loadHexString(new String(fs.readFileSync(process.argv[2])),0)
+entryPoint = parseInt(process.argv[3], 16);
+
+emu.cpu.PC.putUInt32(entryPoint)
 
 setInterval(function () {
 
