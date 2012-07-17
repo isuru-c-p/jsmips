@@ -89,19 +89,6 @@ function ConfigRegister()
 	
 	this.setValue = function(value)
 	{
-		this.M = (value >>> 31) & 0x1;
-		this.K23 = (value >>> 28) & 0x7;
-		this.KU = (value >>> 25) & 0x7;
-		this.ISP = (value >>> 24) & 0x1;
-		this.DSP = (value >>> 23) & 0x1;
-		this.SB = (value >>> 21) & 0x1;
-		this.MDU = (value >>> 20) & 0x1;
-		this.MM = (value >>> 17) & 0x3;
-		this.BM = (value >>> 16) & 0x1;
-		this.BE = (value >>> 15) & 0x1;
-		this.AT = (value >>> 13) & 0x3;
-		this.AR = (value >>> 10) & 0x7;
-		this.MT = (value >>> 7) & 0x7;
 		this.K0 = value & 0x7;
 	}
 	
@@ -125,6 +112,16 @@ function Config1Register()
 	this.CA = 0; // bit 2
 	this.EP = 1; // bit 1
 	this.FP = 0; // bit 0
+	
+	this.asUInt32 = function()
+	{
+		return ((this.M * Math.pow(2,31)) + (this.MMUSize * Math.pow(2,25)) + (this.IS * Math.pow(2,22)) + (this.IL * Math.pow(2,19)) + (this.IA * Math.pow(2,16)) + (this.DS * Math.pow(2,13)) + (this.DL * Math.pow(2,10)) + (this.DA * Math.pow(2,7)) + (this.PC * Math.pow(2,4)) + (this.WR * Math.pow(2,3)) + (this.CA * Math.pow(2,2)) + (this.EP * Math.pow(2,1)) + this.FP);
+	}
+	
+	this.setValue = function(value)
+	{
+		return;
+	}
 }
 
 // CP0 Register 15, Select 0
@@ -135,6 +132,16 @@ function processorIDRegister()
 	this.companyID = 1; // bits 23:16
 	this.processorID = 128; // bits 15:8, (128 for 4kc)
 	this.revision = 11; // bits 7:0, latest version according to manual
+	
+	this.asUInt32 = function()
+	{
+		return ((this.R << 24) + (this.companyID << 16) + (this.processorID << 8) + this.revision);
+	}
+	
+	this.setValue = function(value)
+	{
+		return;
+	}
 }
 
 // CP0 Register 17, Select 0
@@ -142,6 +149,16 @@ function LLAddrRegister()
 {
 	this.zero = 0; // bits 31:28
 	this.PAddr = 0; // bits 27:0 - physical address read by most recent load linked instruction
+	
+	this.asUInt32 = function()
+	{
+		return this.PAddr;
+	}
+	
+	this.setValue = function(value)
+	{
+		return;
+	}
 }
 
 
@@ -156,7 +173,7 @@ function MipsCpu () {
 	this.processorIDRegister = new processorIDRegister();
 	this.llAddrRegister = new LLAddrRegister();
 	this.PC = new GeneralRegister();
-	this.doOp = doOp
+	//this.doOp = doOp
 	
 	this.getEndianness = function()
 	{
