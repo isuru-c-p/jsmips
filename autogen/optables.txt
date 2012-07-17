@@ -1,69 +1,59 @@
-opcode bits 28..26
-0 1 2 3 4 5 6 7
-bits 31..29 000 001 010 011 100 101 110 111
-0 000 Special RegImm J JAL BEQ BNE BLEZ BGTZ
-1 001 ADDI ADDIU SLTI SLTIU ANDI ORI XORI LUI
-2 010 COP0 b b b BEQL BNEL BLEZL BGTZL
-3 011 a a a a Special2 a a a
-4 100 LB LH LWL LW LBU LHU LWR a
-5 101 SB SH SWL SW a a SWR CACHE
-6 110 LL b b PREF a b b a
-7 111 SC b b a a b b a
+First
+28,26
+31,29
+Special RegImm J JAL BEQ BNE BLEZ BGTZ
+ADDI ADDIU SLTI SLTIU ANDI ORI XORI LUI
+COP0 b b b BEQL BNEL BLEZL BGTZL
+a a a a Special2 a a a
+LB LH LWL LW LBU LHU LWR a
+SB SH SWL SW a a SWR CACHE
+LL b b PREF a b b a
+SC b b a a b b a
 
-function bits 2..0
-0 1 2 3 4 5 6 7
-bits 5..3 000 001 010 011 100 101 110 111
-0 000 SLL b SRL SRA SLLV a SRLV SRAV
-1 001 JR JALR MOVZ MOVN SYSCALL BREAK a SYNC
-2 010 MFHI MTHI MFLO MTLO a a a a
-3 011 MULT MULTU DIV DIVU a a a a
-4 100 ADD ADDU SUB SUBU AND OR XOR NOR
-5 101 a a SLT SLTU a a a a
-6 110 TGE TGEU TLT TLTU TEQ a TNE a
-7 111 a a a a a a a a
+----
 
-function bits 2..0
-0 1 2 3 4 5 6 7
-bits 5..3 000 001 010 011 100 101 110 111
-0 000 MADD MADDU MUL a MSUB MSUBU a a
-1 001 a a a a a a a a
-2 010 a a a a a a a a
-3 011 a a a a a a a a
-4 100 CLZ CLO a a a a a a
-5 101 a a a a a a a a
-6 110 a a a a a a a a
-7 111 a a a a a a a SDBBP
+Special
+2,0
+5,3
+SLL b SRL SRA SLLV a SRLV SRAV
+JR JALR MOVZ MOVN SYSCALL BREAK a SYNC
+MFHI MTHI MFLO MTLO a a a a
+MULT MULTU DIV DIVU a a a a
+ADD ADDU SUB SUBU AND OR XOR NOR
+a a SLT SLTU a a a a
+TGE TGEU TLT TLTU TEQ a TNE a
+a a a a a a a a
 
-rt bits 18..16
-0 1 2 3 4 5 6 7
-bits 20..19 000 001 010 011 100 101 110 111
-0 00 BLTZ BGEZ BLTZL BGEZL a a a a
-1 01 TGEI TGEIU TLTI TLTIU TEQI a TNEI a
-2 10 BLTZAL BGEZAL BLTZALL BGEZALL a a a a
-3 11 a a a a a a a a
+----
 
-rs bits 23..21
-0 1 2 3 4 5 6 7
-bits 25..24 000 001 010 011 100 101 110 111
-0 00 MFCO a a a MTC0 a a a
-1 01 a a a a a a a
-2 10
-CO
-3 11
+Special2
+2,0
+5,3
+MADD MADDU MUL a MSUB MSUBU a a
+a a a a a a a a
+a a a a a a a a
+a a a a a a a a
+CLZ CLO a a a a a a
+a a a a a a a a
+a a a a a a a a
+a a a a a a a SDBBP
 
-function bits 2..0
-0 1 2 3 4 5 6 7
-bits 5..3 000 001 010 011 100 101 110 111
-0 000 a TLBR (4Kc)
-a (4Km/p)
-TLBWI (4Kc)
-a (4Km/p) a a a TLBWR (4Kc)
-a (4Km/p) a
-1 001 TLBP (4Kc)
-a (4Km/p) a a a a a a a
-2 010 a a a a a a a a
-3 011 ERET a a a a a a DERET
-4 100 WAIT a a a a a a a
-5 101 a a a a a a a a
-6 110 a a a a a a a a
-7 111 a a a a a a a a
+----
+
+RegImm
+18,16
+20,19
+BLTZ BGEZ BLTZL BGEZL a a a a
+TGEI TGEIU TLTI TLTIU TEQI a TNEI a
+BLTZAL BGEZAL BLTZALL BGEZALL a a a a
+a a a a a a a a
+
+----
+
+Cop0
+23,21
+25,24
+MFCO a a a MTCO a a  a
+a a a a a a a CO
+CO CO CO CO CO CO CO CO
+CO CO CO CO CO CO CO CO
