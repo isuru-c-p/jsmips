@@ -38,12 +38,13 @@ class Table(object):
 			left = (i - top)/noCols
 			
 			opcodeCaseValue = (left << self.ranges[1][0]) + (top << self.ranges[0][0])
+			opcodeCaseBinaryStr = bin(opcodeCaseValue)
 			
 			if (op in tablesDict.keys()):
 				subswitch = str(tablesDict[op])
 				cases += \
 				"""
-					case %(opcodeCaseValue)s:
+					case 0x%(opcodeCaseValue)x: /*%(opcodeCaseBinaryStr)s*/
 						%(subswitch)s;
 						break;
 						
@@ -52,22 +53,23 @@ class Table(object):
 			else:
 				cases += \
 				"""
-					case %(opcodeCaseValue)s:
+					case 0x%(opcodeCaseValue)x: /*%(opcodeCaseBinaryStr)s*/
 						this.%(op)s();
 						break;
 						
 				""" % locals()
 			
+		bitmaskBinaryStr = bin(bitmask)
 		
 		switchCode = \
 """
-bitmask = %(bitmask)s;
-switch(op & bitmask)
+
+/* %(bitmaskBinaryStr)s */
+switch(op & 0x%(bitmask)x)
 {
 	%(cases)s
 }
 
-}
 """ % locals()
 		
 		return switchCode
