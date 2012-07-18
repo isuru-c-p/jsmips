@@ -209,6 +209,16 @@ function MipsCpu () {
 	    this.PC.incr(4);
 	}
 	
+	this.doDelaySlot = function() {
+	
+	    var delayInsAddr = this.PC.asUInt32() + 4;
+	    DEBUG("Executing delay slot ins at " + delayInsAddr.toString(16));
+	    var ins = this.mmu.readWord(delayInsAddr);
+	    this.delaySlot = true;
+	    this.doOp(ins);
+	    this.delaySlot = false;
+	
+	};
 	
 	
 	this.getEndianness = function()
@@ -244,7 +254,7 @@ function MipsCpu () {
 	
 	this.ADDIU = function ( op ){
 	    var imm = op&0x0000ffff;
-	    var rsrc = (op&0x3e00000)>>> 21;
+	    var rsrc = (op&0x3e00000) >>> 21;
 	    var rdest = (op&0x1f0000) >>> 16;
 	    DEBUG("add reg "+rsrc + " with imm " + imm + " and save in reg " + rdest )
 	    var res = this.genRegisters[rsrc].asUInt32() + imm;
@@ -254,18 +264,38 @@ function MipsCpu () {
 	    
 	}
 	
+	this.ADDU = function ( op ){
+	    
+	    var rs = (op&0x3e00000)>>> 21;
+	    var rt = (op&0x1f0000) >>> 16;
+	    var rd = (op&0xf800) >>> 11;
+	    
+	    DEBUG("addu")
+	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rd].asUInt32();
+	    res = res % 4294967296; // handle overflow
+	    this.genRegisters[rd].putUInt32(res);
+	    this.advancePC();
+	    
+	}
+	
+	
 	this.J = function ( op ) {
         
         var top = this.PC.asUInt32()&0xc0000000;
         var addr = top| ((op&0x3ffffff)*4);
         DEBUG("jumping to address " + addr.toString(16))
-	    var delayInsAddr = this.PC.asUInt32() + 4;
-	    DEBUG("Executing delay slot ins at " + delayInsAddr.toString(16));
-	    var ins = this.mmu.readWord(delayInsAddr);
-	    this.delaySlot = true;
-	    this.doOp(ins);
-	    this.delaySlot = false;
+        this.doDelaySlot();
         this.PC.putUInt32(addr);
+        	
+	}
+	
+	this.JAL = function ( op ) {
+	    //same as J but saves return address to stack
+        DEBUG("JAL")
+        var pcval = this.PC.asUInt32();
+        //TODO double check that the stack pointer should be changed BEFORE the delay slot
+        this.J(op);
+        this.genRegisters[31].putUInt32(pcval+8);
         	
 	}
 	
@@ -275,6 +305,17 @@ function MipsCpu () {
 	    DEBUG("loading upper const into reg "+rDest);
 	    this.genRegisters[rDest].putUInt32(c);
 	    this.advancePC();
+	}
+	
+	this.SW = function ( op ){
+	
+	    DEBUG("SW storing word")
+	    var c = (op&0x0000ffff);
+        var rs = (op&0x3e00000)>>> 21;
+	    var rt = (op&0x1f0000) >>> 16;
+	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  )
+	    this.advancePC()
+	    
 	}
 	
 }
