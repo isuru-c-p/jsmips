@@ -11,8 +11,25 @@ function GeneralRegister() { // 32 bit register
     this.putUInt32 = function ( val ) {
         this.val = val;
     }
+    
+    this.incr = function ( v ) {
+        this.val += v;
+    }
 
 }
+
+function ZeroRegister() { // 32 bit register
+    
+    
+    this.asUInt32 = function () {
+        return 0;
+    }
+    
+    this.putUInt32 = function ( val ) {
+    }
+
+}
+
 
 // CP0 Register 12, Select 0
 function StatusRegister() {
@@ -167,13 +184,32 @@ function MipsCpu () {
     //member mmu , to save space i wont make a setter. its set by the emu object
     
     this.genRegisters = new Array(32); // array of 32 32 bit integers
+    
+    this.genRegisters[0] = new ZeroRegister();
+    for(var i = 1 ; i < 32; i++){
+        this.genRegisters[i] = new GeneralRegister();
+    }
+    
+    
+    
 	this.statusRegister = new StatusRegister();
 	this.configRegister = new ConfigRegister();
 	this.config1Register = new Config1Register();
 	this.processorIDRegister = new processorIDRegister();
 	this.llAddrRegister = new LLAddrRegister();
 	this.PC = new GeneralRegister();
-	//this.doOp = doOp
+	this.doOp = doOp;
+	
+	this.delaySlot = false;
+	
+	this.advancePC = function () {
+	    if(this.delaySlot){
+	        return;
+	    }
+	    this.PC.incr(4);
+	}
+	
+	
 	
 	this.getEndianness = function()
 	{
@@ -204,6 +240,41 @@ function MipsCpu () {
 	    DEBUG("instruction word: " + ins.toString(16));
 	    this.doOp(ins);
 	    
+	}
+	
+	this.ADDIU = function ( op ){
+	    var imm = op&0x0000ffff;
+	    var rsrc = (op&0x3e00000)>>> 21;
+	    var rdest = (op&0x1f0000) >>> 16;
+	    DEBUG("add reg "+rsrc + " with imm " + imm + " and save in reg " + rdest )
+	    var res = this.genRegisters[rsrc].asUInt32() + imm;
+	    res = res % 4294967296; // handle overflow
+	    this.genRegisters[rdest].putUInt32(res);
+	    this.advancePC();
+	    
+	}
+	
+	this.J = function ( op ) {
+        
+        var top = this.PC.asUInt32()&0xc0000000;
+        var addr = top| ((op&0x3ffffff)*4);
+        DEBUG("jumping to address " + addr.toString(16))
+	    var delayInsAddr = this.PC.asUInt32() + 4;
+	    DEBUG("Executing delay slot ins at " + delayInsAddr.toString(16));
+	    var ins = this.mmu.readWord(delayInsAddr);
+	    this.delaySlot = true;
+	    this.doOp(ins);
+	    this.delaySlot = false;
+        this.PC.putUInt32(addr);
+        	
+	}
+	
+	this.LUI = function ( op ){
+	    var rDest = (op&0x1f0000) >>> 16;;
+	    var c = (op&0x0000ffff) * 65536;
+	    DEBUG("loading upper const into reg "+rDest);
+	    this.genRegisters[rDest].putUInt32(c);
+	    this.advancePC();
 	}
 	
 }

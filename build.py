@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 targets = [
     "node_4kc.parts",
 ]
@@ -14,6 +17,11 @@ def buildFile(partsfile):
     out.flush()
     out.close()
             
-            
+curDir = os.getcwd()
+os.chdir("autogen")
+subprocess.check_call(['python','build.py'])
+os.chdir(curDir)
+
+   
 for target in targets:
     buildFile(target)

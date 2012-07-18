@@ -46,7 +46,7 @@ class Table(object):
 				"""
 					case 0x%(opcodeCaseValue)x: /*%(opcodeCaseBinaryStr)s*/
 						%(subswitch)s;
-						break;
+						return;
 						
 				""" % locals()			
 			
@@ -54,8 +54,8 @@ class Table(object):
 				cases += \
 				"""
 					case 0x%(opcodeCaseValue)x: /*%(opcodeCaseBinaryStr)s*/
-						this.%(op)s();
-						break;
+						this.%(op)s(op);
+						return;
 						
 				""" % locals()
 			
@@ -65,9 +65,11 @@ class Table(object):
 """
 
 /* %(bitmaskBinaryStr)s */
-switch(op & 0x%(bitmask)x)
+switch((op & 0x%(bitmask)x) >>> 0)
 {
 	%(cases)s
+	default:
+	    throw("Unreachable from opcode: " + op );
 }
 
 """ % locals()
@@ -95,7 +97,7 @@ startingTableStr = str(startingTable)
 
 tableSwitch = \
 """
-	doOp = function(op) {
+	function doOp(op) {
 		%(startingTableStr)s
 	}
 """ % locals()
