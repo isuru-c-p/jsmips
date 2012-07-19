@@ -195,11 +195,11 @@ function getRd (op) {
 
 
 function getSHAMT (op) {
-    return (0x7c0) >>> 6;
+    return (op&0x7c0) >>> 6;
 }
 
 function getFunct (op) {
-    return (0x3f);
+    return (op&0x3f);
 }
 
 
