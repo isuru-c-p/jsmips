@@ -597,5 +597,6 @@ function MipsCpu () {
             console.log(stringToPrint);
         } 
 
+		this.advancePC();
     }	
 }
