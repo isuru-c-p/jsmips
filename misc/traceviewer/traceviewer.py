@@ -23,6 +23,31 @@ class Trace(object):
         self.OP = 0
         self.genRegs = [0 for i in range(32)]
         self.breakPoints = set([])
+        self.dissassemblyCache = {}
+        self.buildDisassemblyCache()
+    def buildDisassemblyCache(self):
+        print "building the disassembly cache..."
+        while True:
+            try:
+                self.step('+')
+            except:
+                break
+            if self.PC in self.dissassemblyCache:
+                if self.OP != self.dissassemblyCache[self.PC][0]:
+                    raise Exception("self modifying code unsupported")
+            else:
+                self.dissassemblyCache[self.PC] = [self.OP,disassemble(self.OP)]
+
+        while True:
+            try:
+                self.step('-')
+            except:
+                break
+    def getCachedDisassembly(self,addr):
+        if addr not in self.dissassemblyCache.keys():
+            return "PC: %08X ..."%(addr)
+        return "PC: %08X %s"%(addr,self.dissassemblyCache[addr][1])
+        
     def runUntilBreak(self,d):
         while True:
             self.step(d)
@@ -75,7 +100,6 @@ class Trace(object):
         vals = {}
         vals["HI"] = self.HI
         vals["LO"] = self.LO
-        vals["PC"] = self.PC
         vals["OP"] = disassemble(self.OP)
         
         ret = ""
@@ -88,7 +112,11 @@ class Trace(object):
         ret += '\n'
             
         ret += "HI: %(HI)08X LO: %(LO)08X\n\n" + \
-        "PC: %(PC)08X: %(OP)s\n" 
+            " " + self.getCachedDisassembly(self.PC-8) + '\n' +\
+            " " + self.getCachedDisassembly(self.PC-4) + '\n' +\
+            ">" + self.getCachedDisassembly(self.PC) + '\n' +\
+            " " + self.getCachedDisassembly(self.PC+4) + '\n' +\
+            " " + self.getCachedDisassembly(self.PC+8) + '\n'
 
         return ret%vals
         
