@@ -4,4 +4,5 @@ autogen/doOp.autogen
 cpu.js
 mmu.js
 Emu.js
+node_tracer.js
 node_main.js

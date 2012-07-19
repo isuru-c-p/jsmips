@@ -581,9 +581,7 @@ function MipsCpu () {
         var v0_val = this.genRegisters[2].asUInt32();
         var a0_val = this.genRegisters[4].asUInt32();
 
-        console.log("a0_val: " + a0_val);
 
-        console.log("v0_val: " + v0_val);
 
         if(v0_val == 4)
         {
