@@ -181,7 +181,7 @@ function LLAddrRegister()
 
 
 function getRs (op) {
-    return (op&0x3e00000) >>> 21;;
+    return (op&0x3e00000) >>> 21;
 }
 
 function getRt (op) {
@@ -199,7 +199,7 @@ function getSHAMT (op) {
 }
 
 function getFunct (op) {
-    return (0x3f) >>> 6;
+    return (0x3f);
 }
 
 
