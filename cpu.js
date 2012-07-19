@@ -179,6 +179,30 @@ function LLAddrRegister()
 }
 
 
+
+function getRs (op) {
+    return (op&0x3e00000) >>> 21;;
+}
+
+function getRt (op) {
+    return (op&0x1f0000) >>> 16;    
+}
+
+
+function getRd (op) {
+    return (op&0xf800) >>> 11;
+}
+
+
+function getSHAMT (op) {
+    return (0x7c0) >>> 6;
+}
+
+function getFunct (op) {
+    return (0x3f) >>> 6;
+}
+
+
 function MipsCpu () {
 
     //member mmu , to save space i wont make a setter. its set by the emu object
@@ -254,21 +278,21 @@ function MipsCpu () {
 	
 	this.ADDIU = function ( op ){
 	    var imm = op&0x0000ffff;
-	    var rsrc = (op&0x3e00000) >>> 21;
-	    var rdest = (op&0x1f0000) >>> 16;
-	    DEBUG("add reg "+rsrc + " with imm " + imm + " and save in reg " + rdest )
-	    var res = this.genRegisters[rsrc].asUInt32() + imm;
+	    var rs = getRs(op);
+	    var rt = getRt(op);
+	    DEBUG("add reg "+rs + " with imm " + imm + " and save in reg " + rt )
+	    var res = this.genRegisters[rs].asUInt32() + imm;
 	    res = res % 4294967296; // handle overflow
-	    this.genRegisters[rdest].putUInt32(res);
+	    this.genRegisters[rt].putUInt32(res);
 	    this.advancePC();
 	    
 	}
 	
 	this.ADDU = function ( op ){
 	    
-	    var rs = (op&0x3e00000)>>> 21;
-	    var rt = (op&0x1f0000) >>> 16;
-	    var rd = (op&0xf800) >>> 11;
+	    var rs = getRs(op);
+	    var rt = getRt(op);
+	    var rd = getRd(op);
 	    
 	    DEBUG("addu")
 	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rd].asUInt32();
@@ -300,7 +324,7 @@ function MipsCpu () {
 	}
 	
 	this.LUI = function ( op ){
-	    var rDest = (op&0x1f0000) >>> 16;;
+	    var rDest = getRt(op);
 	    var c = (op&0x0000ffff) * 65536;
 	    DEBUG("loading upper const into reg "+rDest);
 	    this.genRegisters[rDest].putUInt32(c);
@@ -311,8 +335,8 @@ function MipsCpu () {
 	
 	    DEBUG("SW storing word")
 	    var c = (op&0x0000ffff);
-        var rs = (op&0x3e00000)>>> 21;
-	    var rt = (op&0x1f0000) >>> 16;
+        var rs = getRs(op);
+	    var rt = getRt(op);
 	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  )
 	    this.advancePC()
 	    
