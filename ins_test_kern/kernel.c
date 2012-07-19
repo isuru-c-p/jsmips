@@ -4,6 +4,14 @@
 
 void print(char * s){
     s = 0;
+    
+    asm("move $a0,%0\n"
+        "li $v0 , 4\n"
+        "syscall\n"
+        : 
+        : "r" (s)
+        : "v0", "a0" );
+    
 }
 
 
