@@ -580,6 +580,9 @@ function MipsCpu () {
         DEBUG("SYSCALL");
         var v0_val = this.genRegisters[2].asUInt32();
         var a0_val = this.genRegisters[4].asUInt32();
+
+        console.log("a0_val: " + a0_val);
+
         console.log("v0_val: " + v0_val);
 
         if(v0_val == 4)
@@ -587,10 +590,10 @@ function MipsCpu () {
             var characterInt;
             var stringToPrint = "";
 
-            for(characterInt = this.mmu.readWord(a0_val); characterInt != 0; a0_val++)
+            for(characterInt = this.mmu.readByte(a0_val); characterInt != 0; a0_val++)
             {
                 stringToPrint += String.fromCharCode(characterInt);
-                characterInt = this.mmu.readWord(a0_val);
+                characterInt = this.mmu.readByte(a0_val+1);
             }
 
             console.log(stringToPrint);
