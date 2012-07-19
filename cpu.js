@@ -9,7 +9,7 @@ function GeneralRegister() { // 32 bit register
     }
     
     this.putUInt32 = function ( val ) {
-        this.val = val;
+        this.val = val >>> 0;
     }
     
     this.incr = function ( v ) {
@@ -181,7 +181,7 @@ function LLAddrRegister()
 
 
 function getRs (op) {
-    return (op&0x3e00000) >>> 21;;
+    return (op&0x3e00000) >>> 21;
 }
 
 function getRt (op) {
@@ -195,12 +195,34 @@ function getRd (op) {
 
 
 function getSHAMT (op) {
-    return (0x7c0) >>> 6;
+    return (op&0x7c0) >>> 6;
 }
 
 function getFunct (op) {
-    return (0x3f) >>> 6;
+    return (op&0x3f) >>> 0;
 }
+
+function getSigned (value) {
+	return (value & 0xffffffff);
+}
+
+function getSigned16 (value) {
+	var sign = 0;
+	var signedVal = value;
+	
+	if((value << 16) < 0)
+	{
+		sign = 1;
+	}
+	
+	if(sign)
+	{
+		signedVal = (~(signedVal) + 1) & 0x0000ffff;
+	}
+	
+	return signedVal;
+}
+
 
 
 function MipsCpu () {
@@ -234,8 +256,8 @@ function MipsCpu () {
 	}
 	
 	this.doDelaySlot = function() {
-	
-	    var delayInsAddr = this.PC.asUInt32() + 4;
+		this.PC.incr(4);
+	    var delayInsAddr = this.PC.asUInt32();
 	    DEBUG("Executing delay slot ins at " + delayInsAddr.toString(16));
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
@@ -270,7 +292,7 @@ function MipsCpu () {
 	
 	    var pcVal = this.PC.asUInt32();
 	    DEBUG("Executing instruction at " + pcVal.toString(16));
-	    var ins = this.mmu.readWord(pcVal)
+	    var ins = this.mmu.readWord(pcVal);
 	    DEBUG("instruction word: " + ins.toString(16));
 	    this.doOp(ins);
 	    
@@ -280,7 +302,7 @@ function MipsCpu () {
 	    var imm = op&0x0000ffff;
 	    var rs = getRs(op);
 	    var rt = getRt(op);
-	    DEBUG("add reg "+rs + " with imm " + imm + " and save in reg " + rt )
+	    DEBUG("add reg "+rs + " with imm " + imm + " and save in reg " + rt );
 	    var res = this.genRegisters[rs].asUInt32() + imm;
 	    res = res % 4294967296; // handle overflow
 	    this.genRegisters[rt].putUInt32(res);
@@ -294,7 +316,7 @@ function MipsCpu () {
 	    var rt = getRt(op);
 	    var rd = getRd(op);
 	    
-	    DEBUG("addu")
+	    DEBUG("addu");
 	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rd].asUInt32();
 	    res = res % 4294967296; // handle overflow
 	    this.genRegisters[rd].putUInt32(res);
@@ -307,7 +329,7 @@ function MipsCpu () {
         
         var top = this.PC.asUInt32()&0xc0000000;
         var addr = top| ((op&0x3ffffff)*4);
-        DEBUG("jumping to address " + addr.toString(16))
+        DEBUG("jumping to address " + addr.toString(16));
         this.doDelaySlot();
         this.PC.putUInt32(addr);
         	
@@ -315,12 +337,14 @@ function MipsCpu () {
 	
 	this.JAL = function ( op ) {
 	    //same as J but saves return address to stack
-        DEBUG("JAL")
+        DEBUG("JAL");
         var pcval = this.PC.asUInt32();
-        //TODO double check that the stack pointer should be changed BEFORE the delay slot
-        this.J(op);
+        var top = pcval&0xc0000000;
+        var addr = top| ((op&0x3ffffff)*4);
+        this.doDelaySlot();
+        DEBUG("jumping to address " + addr.toString(16))
         this.genRegisters[31].putUInt32(pcval+8);
-        	
+        this.PC.putUInt32(addr);
 	}
 	
 	this.LUI = function ( op ){
@@ -331,15 +355,96 @@ function MipsCpu () {
 	    this.advancePC();
 	}
 	
+	this.LW = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = (op&0x0000ffff);
+		DEBUG("LW loading word");
+		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rs]+c));
+		this.advancePC();
+	}
+	
 	this.SW = function ( op ){
 	
-	    DEBUG("SW storing word")
+	    DEBUG("SW storing word");
 	    var c = (op&0x0000ffff);
         var rs = getRs(op);
 	    var rt = getRt(op);
-	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  )
-	    this.advancePC()
+	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  );
+	    this.advancePC();
 	    
 	}
 	
+	this.SLL = function ( op ){
+		DEBUG("SLL");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var sa = getSHAMT(op);
+		var val = this.genRegisters[rt] * Math.pow(2,sa);
+		
+		this.genRegisters[rd].putUInt32(val);
+		this.advancePC();
+	}
+	
+	this.SLTI = function ( op ){
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var c = (op&0x0000ffff);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		if(getSigned(rs_val) < getSigned16(c))
+		{
+			this.genRegisters[rt].putUInt32(1);
+		}
+		else
+		{
+			this.genRegisters[rt].putUInt32(0);
+		}
+		
+		this.advancePC();
+	}
+	
+	this.SLTIU = function ( op ){
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var c = (op&0x0000ffff);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		if(rs_val < c)
+		{
+			this.genRegisters[rt].putUInt32(1);
+		}
+		else
+		{
+			this.genRegisters[rt].putUInt32(0);
+		}
+		
+		this.advancePC();
+	}	
+	
+	this.BNE = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var offset = getSigned16(op&0x0000ffff);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val != rt_val)
+		{
+			this.doDelaySlot();
+			DEBUG("BNE - taking branch");
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BNE - not taking branch");
+			this.advancePC();
+		}
+	}
 }
