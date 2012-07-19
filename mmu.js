@@ -30,11 +30,11 @@ function Mmu(size) {
 	{
 		if(this.cpu.getEndianness() == 0)
 		{
-			return this.physicalMemory.putUInt32LE(address, value);
+			return this.physicalMemory.putUInt32LE(address, value >>> 0);
 		}
 		else
 		{
-			return this.physicalMemory.putUInt32BE(address, value);
+			return this.physicalMemory.putUInt32BE(address, value >>> 0);
 		}	
 	}
 }
