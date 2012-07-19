@@ -445,7 +445,7 @@ function MipsCpu () {
 		var c = (op&0x0000ffff);
 		DEBUG("LW loading word");
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rs].asUInt32()+c));
-		console.log("lw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
+		//console.log("lw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
 		this.advancePC();
 	}
 	
@@ -456,7 +456,7 @@ function MipsCpu () {
         var rs = getRs(op);
 	    var rt = getRt(op);
 	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  );
-		console.log("sw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
+		//console.log("sw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
 	    this.advancePC();
 	    
 	}
@@ -493,16 +493,16 @@ function MipsCpu () {
 		var c = (op&0x0000ffff);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
-		console.log("rt: " + rt + ", rs: " + rs + ", rs_val: " + rs_val + ", c: " + getSigned16(c));
+		//console.log("rt: " + rt + ", rs: " + rs + ", rs_val: " + rs_val + ", c: " + getSigned16(c));
 		
 		if(getSigned(rs_val) < getSigned16(c))
 		{
-			console.log("set");
+			//console.log("set");
 			this.genRegisters[rt].putUInt32(1);
 		}
 		else
 		{
-			console.log("not set");
+			//console.log("not set");
 			this.genRegisters[rt].putUInt32(0);
 		}
 		
@@ -574,5 +574,27 @@ function MipsCpu () {
 			DEBUG("BEQ - not taking branch");
 			this.advancePC();
 		}
-	}	
+	}
+
+    this.SYSCALL = function ( op ) {
+        DEBUG("SYSCALL");
+        var v0_val = this.genRegisters[2].asUInt32();
+        var a0_val = this.genRegisters[4].asUInt32();
+        console.log("v0_val: " + v0_val);
+
+        if(v0_val == 4)
+        {
+            var characterInt;
+            var stringToPrint = "";
+
+            for(characterInt = this.mmu.readWord(a0_val); characterInt != 0; a0_val++)
+            {
+                stringToPrint += String.fromCharCode(characterInt);
+                characterInt = this.mmu.readWord(a0_val);
+            }
+
+            console.log(stringToPrint);
+        } 
+
+    }	
 }
