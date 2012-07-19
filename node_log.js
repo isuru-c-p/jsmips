@@ -1,4 +1,4 @@
-LOG_LEVEL = 0
+LOG_LEVEL = -1
 
 function DEBUG (m) {
     if(LOG_LEVEL >= 0){

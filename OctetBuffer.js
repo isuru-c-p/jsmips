@@ -140,7 +140,7 @@ function OctetBuffer ( arg ) {
             b = parseInt(b,16);
             this.putByte(offset + i/2,b);
             
-            DEBUG("putting " + b + " at address " + (offset + i/2).toString(16) )
+            //DEBUG("putting " + b + " at address " + (offset + i/2).toString(16) )
             
         }
     } 
