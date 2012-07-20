@@ -1,10 +1,28 @@
 set -e
 
-mips-linux-gcc -o kernel.o -c kernel.c -Wall -Wextra -Werror \
-    -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
-mips-linux-as -o entry.o entry.s
-mips-linux-ld -T linker.ld -o kernel.bin entry.o kernel.o
-mips-linux-objdump -D kernel.bin > kernel.map
-python tohex.py kernel.bin > kernel.hex
-echo "built kernel with entry point:" 
-echo `mips-linux-nm kernel.bin | grep entry`
+
+
+
+buildKernel () {
+
+    NAME=`basename $1 .c`
+    mips-linux-gcc -o kernel_common.o -c kernel.c  -Wall -Wextra -Werror \
+        -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
+    mips-linux-gcc -o kernel_$NAME.o -c $1 -Wall -Wextra -Werror \
+        -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
+    mips-linux-as -o entry.o entry.s
+    mips-linux-ld -T linker.ld -o kernel_$NAME.bin entry.o kernel_$NAME.o kernel_common.o
+    mips-linux-objdump -D kernel_$NAME.bin > kernel_$NAME.map
+    python tohex.py kernel_$NAME.bin > kernel_$NAME.hex
+    echo `mips-linux-nm kernel_$NAME.bin | grep entry | cut -c 1-8` > kernel_$NAME.entry
+    echo "built kernel with entry point:"
+    cat kernel_$NAME.entry
+
+}
+
+for f in `ls tests/*.c`
+do 
+
+buildKernel $f
+
+done
