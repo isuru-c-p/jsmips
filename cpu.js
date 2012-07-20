@@ -351,6 +351,7 @@ function MipsCpu () {
     }
 	
 	this.XOR = function ( op ) {
+        DEBUG("XOR");
 		var rs = getRs(op);
 		var rt = getRt(op);
 		var rd = getRd(op);
@@ -363,6 +364,19 @@ function MipsCpu () {
 		this.genRegisters[rd].putUInt32(rs_val ^ rt_val);
 		this.advancePC();
 	}
+
+    this.XORI = function ( op ) {
+        DEBUG("XORI");
+        var rs = getRs(op);
+        var c = (op & 0x0000ffff);
+        var rt = getRt(op);
+
+        var rs_val = this.genRegisters[rs].asUInt32();
+        var result = (rs_val ^ c);
+
+        this.genRegisters[rt].putUInt32(result);
+        this.advancePC();
+    }
 	
 	this.NOR = function ( op ) {
 		DEBUG("NOR");
