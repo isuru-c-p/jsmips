@@ -1239,6 +1239,16 @@ function MipsCpu () {
 
             console.log(stringToPrint);
         }
+        
+        if(v0_val == 5)
+        {
+            process.exit(0);
+        }
+        
+        if(v0_val == 6)
+        {
+            process.exit(1);
+        }
 
 		this.advancePC();
     }	

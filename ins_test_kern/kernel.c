@@ -16,11 +16,23 @@ void print(char * s){
 
 void fail() {
     print("test failed!\n");
+    asm(
+    "li $v0 , 6\n"
+    "syscall\n"
+    : 
+    : 
+    : "v0" );
+    
 }
 
 void pass(){
-     print("test passed!\n");
-     while(1) ;
+    print("test passed!\n");
+    asm(
+    "li $v0 , 5\n"
+    "syscall\n"
+    : 
+    : 
+    : "v0" );
 }
 
 
