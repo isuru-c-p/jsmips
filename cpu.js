@@ -645,6 +645,19 @@ function MipsCpu () {
         this.PC.putUInt32(addr);
 	}
 	
+	this.JALR = function ( op ) {
+	    //same as J but saves return address to stack
+        DEBUG("JALR");
+        var pcval = this.PC.asUInt32();
+		var rs = getRs(op);
+		var addr = this.genRegisters[rs].asUInt32();
+		
+        this.doDelaySlot();
+        DEBUG("jumping to address " + addr.toString(16))
+        this.genRegisters[31].putUInt32(pcval+8);
+        this.PC.putUInt32(addr);
+	}	
+	
 	this.LUI = function ( op ){
 	    var rDest = getRt(op);
 	    var c = (op&0x0000ffff) * 65536;
@@ -685,30 +698,22 @@ function MipsCpu () {
 	    
 	}
 	
-	
-	
-	this.BNE = function ( op ) {
-		var rs = getRs(op);
-		var rt = getRt(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
-		
-		var rs_val = this.genRegisters[rs].asUInt32();
-		var rt_val = this.genRegisters[rt].asUInt32();
-		
+	this.B = function ( op ) {
+		var offset = getSigned16(op & 0x0000ffff);
 		this.doDelaySlot();
-		var pc_val = this.PC.asUInt32();
-		var addr = pc_val + offset;
-		
-		if(rs_val != rt_val)
-		{
-			DEBUG("BNE - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
-			this.PC.putUInt32(addr);
-		}
-		else
-		{
-			DEBUG("BNE - not taking branch");
-			this.advancePC();
-		}
+		DEBUG("B");
+		this.PC.incr(offset);
+		this.advancePC();
+	}
+	
+	this.BAL = function ( op ){
+		var offset = getSigned16(op & 0x0000ffff);
+		var ret_addr = this.PC.asUInt32() + 8;
+		this.genRegisters[31].putUInt32(ret_addr);
+		this.doDelaySlot();
+		DEBUG("BAL");
+		this.PC.putUInt32(this.PC.asUInt32() + offset);
+		this.advancePC();
 	}
 	
 	this.BEQ = function ( op ) {
@@ -735,6 +740,30 @@ function MipsCpu () {
 		}
 	}
 	
+	this.BEQL = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var offset = getSigned16(op&0x0000ffff);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		if(rs_val == rt_val)
+		{
+			this.doDelaySlot();
+			var pc_val = this.PC.asUInt32();
+			var addr = pc_val + offset;
+			DEBUG("BEQL - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BEQL - not taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}
+	
 	this.BGEZ = function ( op ) {
 		var rs = getRs(op);
 		var offset = getSigned16((op&0x0000ffff) * 4);
@@ -754,7 +783,161 @@ function MipsCpu () {
 			DEBUG("BGEZ - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
 			this.advancePC();
 		}
+	}
+
+	this.BGEZAL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		this.genRegisters[31].putUInt32(pc_val+4);
+		
+		if(rs_val >= 0)
+		{
+			DEBUG("BGEZAL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BGEZAL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}
+
+	this.BGEZALL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		var pc_val = this.PC.asUInt32();
+		
+		this.genRegisters[31].putUInt32(pc_val+8);
+		
+		if(rs_val >= 0)
+		{
+			this.doDelaySlot();	
+			var addr = pc_val + 4 + offset;	
+			DEBUG("BGEZALL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BGEZALL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}
+
+	this.BGEZL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		var pc_val = this.PC.asUInt32();
+		
+		if(rs_val >= 0)
+		{
+			this.doDelaySlot();	
+			var addr = pc_val + 4 + offset;	
+			DEBUG("BGEZL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BGEZL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
 	}	
+	
+	this.BGTZ = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val > 0)
+		{
+			DEBUG("BGTZ - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BGTZ - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+		}	
+	}
+	
+	this.BGTZL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		if(rs_val > 0)
+		{
+			this.doDelaySlot();
+			var pc_val = this.PC.asUInt32();
+			var addr = pc_val + offset;
+			DEBUG("BGTZL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BGTZL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}	
+	}	
+	
+	this.BLEZ = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val <= 0)
+		{
+			DEBUG("BLEZ - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLEZ - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+		}
+	}	
+	
+	this.BLEZL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		if(rs_val <= 0)
+		{
+			this.doDelaySlot();
+			var pc_val = this.PC.asUInt32();
+			var addr = pc_val + offset;
+			DEBUG("BLEZL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLEZL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}
 
 	this.BLTZ = function ( op ) {
 		var rs = getRs(op);
@@ -776,6 +959,195 @@ function MipsCpu () {
 			this.advancePC();
 		}
 	}	
+	
+	this.BLTZAL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		this.genRegisters[31].putUInt32(pc_val+4);
+		
+		if(rs_val < 0)
+		{
+			DEBUG("BLTZAL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLTZAL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+		}
+	}	
+	
+	this.BLTZALL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		var pc_val = this.PC.asUInt32();
+		
+		this.genRegisters[31].putUInt32(pc_val+8);
+		
+		if(rs_val < 0)
+		{
+			this.doDelaySlot();
+			var addr = pc_val + 4 + offset;
+			DEBUG("BLTZALL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLTZALL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}	
+
+	this.BLTZL = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		if(rs_val < 0)
+		{
+			this.doDelaySlot();
+			var pc_val = this.PC.asUInt32();
+			var addr = pc_val + offset;
+			DEBUG("BLTZL - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLTZL - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+			this.advancePC();
+		}
+	}
+	
+	this.BNE = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val != rt_val)
+		{
+			DEBUG("BNE - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BNE - not taking branch");
+			this.advancePC();
+		}
+	}	
+
+	this.BNEL = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		if(rs_val != rt_val)
+		{
+			this.doDelaySlot();
+			var pc_val = this.PC.asUInt32();
+			var addr = pc_val + offset;
+			DEBUG("BNEL - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BNEL - not taking branch");
+			this.advancePC();
+			this.advancePC();
+		}
+	}	
+	
+	this.CLO = function ( op ) {
+		DEBUG("CLO");
+		var rs = getRs(op);
+		var rd = getRd(op);
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		var bit = (rs_val & 0x80000000);
+		var count = 0;
+		
+		while(bit)
+		{
+			rs_val = ((rs_val * 2) & 0xffffffff) >>> 0;
+			bit = (rs_val & 0x80000000);
+			count++;
+		}		
+	
+		this.genRegisters[rd].putUInt32(count);
+		this.advancePC();
+	}
+	
+	this.CLZ = function ( op ) {
+		DEBUG("CLZ");
+		var rs = getRs(op);
+		var rd = getRd(op);
+		var rs_val = (~this.genRegisters[rs].asUInt32() & 0xffffffff) >>> 0;
+		
+		var bit = (rs_val & 0x80000000);
+		var count = 0;
+		
+		while(bit)
+		{
+			rs_val = ((rs_val * 2) & 0xffffffff) >>> 0;
+			bit = (rs_val & 0x80000000);
+			count++;
+		}		
+	
+		this.genRegisters[rd].putUInt32(count);
+		this.advancePC();
+	}	
+	
+	this.DIV = function ( op ) {
+		DEBUG("DIV");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		var rt_val = Math.abs(getSigned(this.genRegisters[rt].asUInt32()));
+		
+		var modulo = rs_val % rt_val;
+		var answer = (rs_val - modulo)/rt_val;
+		
+		this.LO.putUInt32(answer);
+		this.HI.putUInt32(modulo);
+		this.advancePC();
+	}
+	
+	this.DIVU = function ( op ) {
+		DEBUG("DIVU");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		
+		var rs_val = Math.abs(getSigned(this.genRegisters[rs].asUInt32()));
+		var rt_val = Math.abs(getSigned(this.genRegisters[rt].asUInt32()));
+		
+		var modulo = rs_val % rt_val;
+		var answer = (rs_val - modulo)/rt_val;
+		
+		this.LO.putUInt32(answer);
+		this.HI.putUInt32(modulo);
+		this.advancePC();
+	}
+	
 	
     this.SYSCALL = function ( op ) {
         DEBUG("SYSCALL");
