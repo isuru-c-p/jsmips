@@ -1,1 +1,1 @@
-rm *.entry *.map *.trace *.o *.bin *.hex
+rm -f *.entry *.map *.trace *.o *.bin *.hex

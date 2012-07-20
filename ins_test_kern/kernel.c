@@ -35,6 +35,15 @@ void pass(){
     : "v0" );
 }
 
+void abort(){
+    fail();
+}
+
+void exit(int val){
+    if(val)
+        fail();
+    pass();
+}
 
 void kmain(void)
 {

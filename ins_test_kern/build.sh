@@ -6,9 +6,9 @@ set -e
 buildKernel () {
 
     NAME=`basename $1 .c`
-    mips-linux-gcc -o kernel_common.o -c kernel.c  -Wall -Wextra -Werror \
+    mips-linux-gcc -O3 -o kernel_common.o -c kernel.c  -Wall -Wextra  \
         -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
-    mips-linux-gcc -o kernel_$NAME.o -c $1 -Wall -Wextra -Werror \
+    mips-linux-gcc -O3 -o kernel_$NAME.o -c $1 -Wall -Wextra \
         -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
     mips-linux-as -o entry.o entry.s
     mips-linux-ld -T linker.ld -o kernel_$NAME.bin entry.o kernel_$NAME.o kernel_common.o
