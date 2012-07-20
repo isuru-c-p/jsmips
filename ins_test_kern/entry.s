@@ -1,6 +1,5 @@
 .global entry
 
 entry:
-    addiu $sp,$0,0xffff
-    addiu $sp,$sp,0xffff
+    lui $sp,0x3
     j kmain

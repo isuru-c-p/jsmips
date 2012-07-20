@@ -11,10 +11,9 @@ Disassembly of section .text:
     100c:	00000000 	nop
 
 00001010 <entry>:
-    1010:	241dffff 	li	sp,-1
-    1014:	08000400 	j	1000 <.pic.kmain>
-    1018:	27bdffff 	addiu	sp,sp,-1
-    101c:	00000000 	nop
+    1010:	08000400 	j	1000 <.pic.kmain>
+    1014:	3c1d0003 	lui	sp,0x3
+	...
 
 00001020 <print>:
     1020:	27bdfff8 	addiu	sp,sp,-8
