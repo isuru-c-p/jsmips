@@ -239,6 +239,11 @@ function MipsCpu () {
     for(var i = 1 ; i < 32; i++){
         this.genRegisters[i] = new GeneralRegister();
     }
+
+    this.C0Registers = new Array(32);
+    for(var i = 1; i < 32; i++) {
+        this.C0Registers[i] = new GeneralRegister();
+    }
     
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
@@ -655,8 +660,18 @@ function MipsCpu () {
 
         // advancePC done in this.MULT
     }
+
+    this.MFC0 = function ( op ) {
+        DEBUG("MFC0");
+        var rt = getRt(op);
+        var cd = getRd(op);
+
+        this.genRegisters[rt].putUInt32(this.C0Registers[cd].asUInt32());
+        this.advancePC();
+    }
 	
 	this.MFHI = function ( op ) {
+        DEBUG("MFHI");
 		var rd = getRd(op);
 		this.genRegisters[rd].putUInt32(this.HI.asUInt32());
 		//console.log("MFHI: " + this.genRegisters[rd].asUInt32());
@@ -664,10 +679,39 @@ function MipsCpu () {
 	}
 	
 	this.MFLO = function ( op ) {
+        DEBUG("MFLO");
 		var rd = getRd(op);
 		this.genRegisters[rd].putUInt32(this.LO.asUInt32());
 		this.advancePC();
 	}
+
+    this.MOVN = function ( op ) {
+        DEBUG("MOVN");
+        var rt = getRt(op);
+        var rs = getRs(op);
+        var rd = getRd(op);
+
+        if(rt != 0)
+        {
+            this.genRegisters[rd].putUInt32(this.genRegisters[rs].asUInt32());
+        }
+        
+        this.advancePC();
+    }
+
+    this.MOVZ = function ( op ){
+        DEBUG("MOVZ");
+        var rt = getRt(op);
+        var rs = getRs(op);
+        var rd = getRd(op);
+
+        if(rt == 0)
+        {
+            this.genRegisters[rd].putUInt32(this.genRegisters[rs].asUInt32());
+        }
+        
+        this.advancePC();
+    }
 	
 	this.J = function ( op ) {
         
