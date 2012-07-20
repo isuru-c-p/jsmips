@@ -303,6 +303,20 @@ function MipsCpu () {
 	    
 	}
 	
+	this.XOR = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var rd = getRd(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		DEBUG("XOR");
+		
+		this.genRegisters[rd].putUInt32(rs_val ^ rt_val);
+		this.advancePC();
+	}
+	
 	this.ORI = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
@@ -329,6 +343,19 @@ function MipsCpu () {
 		//var result = (rs_val - rt_val) >>> 0;
 		
 		this.genRegisters[rd].putUInt32(result);
+		this.advancePC();
+	}
+	
+	this.ANDI = function ( op ){
+		DEBUG("ANDI");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var imm = (op&0x0000ffff);
+		
+		var result = this.genRegisters[rs].asUInt32();
+		result = ((result & 0x0000ffff) | imm) >>> 0;
+		
+		this.genRegisters[rt].putUInt32(result);
 		this.advancePC();
 	}
 	
@@ -422,6 +449,14 @@ function MipsCpu () {
         this.doDelaySlot();
         this.PC.putUInt32(addr);
         	
+	}
+	
+	this.JR = function ( op ) {
+		var rs = getRs(op);
+		var addr = this.genRegisters[rs].asUInt32();
+        DEBUG("JR (rs: " + rs + ") jumping to address " + addr.toString(16));
+		this.doDelaySlot();
+		this.PC.putUInt32(addr);
 	}
 	
 	this.JAL = function ( op ) {
@@ -597,6 +632,30 @@ function MipsCpu () {
 			this.advancePC();
 		}
 	}
+	
+	this.BGEZ = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		var rt_val = getSigned(this.genRegisters[rt].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val >= rt_val)
+		{
+			DEBUG("BEQ - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BEQ - not taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			this.advancePC();
+		}
+	}	
 
     this.SYSCALL = function ( op ) {
         DEBUG("SYSCALL");
@@ -617,7 +676,7 @@ function MipsCpu () {
             }
 
             console.log(stringToPrint);
-        } 
+        }
 
 		this.advancePC();
     }	
