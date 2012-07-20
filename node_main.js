@@ -61,7 +61,7 @@ setInterval(function () {
         if(shouldTrace){
             tracer.writeTrace(emu);
             traceCount += 1;
-            if(traceCount < 100000000){
+            if(traceCount > 100000000){
                 ERROR("thats a large trace...")
                 process.exit(1);
             }
