@@ -50,14 +50,21 @@ emu.mmu.physicalMemory.loadHexString(new String(fs.readFileSync(image)),0)
 
 if (shouldTrace){
     tracer = new Tracer(tracefile);
+    var traceCount = 0;
 }
 emu.cpu.PC.putUInt32(entryPoint)
+
 
 setInterval(function () {
 
     for(var i = 0 ; i < 500 ; i++){
         if(shouldTrace){
             tracer.writeTrace(emu);
+            traceCount += 1;
+            if(traceCount < 100000000){
+                ERROR("thats a large trace...")
+                process.exit(1);
+            }
         }
         emu.step();
     }
