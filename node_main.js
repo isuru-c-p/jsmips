@@ -17,7 +17,7 @@ emu.cpu.PC.putUInt32(entryPoint)
 setInterval(function () {
 
     for(var i = 0 ; i < 500 ; i++){
-        tracer.writeTrace(emu);
+        //tracer.writeTrace(emu);
         emu.step();
     }
 

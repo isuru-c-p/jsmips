@@ -425,6 +425,28 @@ function MipsCpu () {
 		this.advancePC();
 	}
 	
+	this.SLTU = function ( op ){
+		DEBUG("SLTU");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var rd = getRd(op);
+		
+		if(rs_val < rt_val)
+		{
+			this.genRegisters[rd].putUInt32(1);	
+		}
+		else
+		{
+			this.genRegisters[rd].putUInt32(0);
+		}
+	
+		this.advancePC();
+	}
+	
 	this.SLL = function ( op ){
 		DEBUG("SLL");
 		var rd = getRd(op);
@@ -479,6 +501,20 @@ function MipsCpu () {
 		
 		var result = (rs_val + twosComplement(rt_val)) >>> 0;
 		//var result = (rs_val - rt_val) >>> 0;
+		
+		this.genRegisters[rd].putUInt32(result);
+		this.advancePC();
+	}
+	
+	this.AND = function ( op ) {
+		DEBUG("AND");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var rd = getRd(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		var result = (rs_val & rt_val);
 		
 		this.genRegisters[rd].putUInt32(result);
 		this.advancePC();
@@ -701,28 +737,46 @@ function MipsCpu () {
 	
 	this.BGEZ = function ( op ) {
 		var rs = getRs(op);
-		var rt = getRt(op);
 		var offset = getSigned16((op&0x0000ffff) * 4);
-		
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
-		var rt_val = getSigned(this.genRegisters[rt].asUInt32());
 		
 		this.doDelaySlot();
 		var pc_val = this.PC.asUInt32();
 		var addr = pc_val + offset;
 		
-		if(rs_val >= rt_val)
+		if(rs_val >= 0)
 		{
-			DEBUG("BEQ - taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			DEBUG("BGEZ - taking branch (offset: " + offset + ") rs_val: " + rs_val);
 			this.PC.putUInt32(addr);
 		}
 		else
 		{
-			DEBUG("BEQ - not taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
+			DEBUG("BGEZ - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
 			this.advancePC();
 		}
 	}	
 
+	this.BLTZ = function ( op ) {
+		var rs = getRs(op);
+		var offset = getSigned16((op&0x0000ffff) * 4);
+		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
+		
+		this.doDelaySlot();
+		var pc_val = this.PC.asUInt32();
+		var addr = pc_val + offset;
+		
+		if(rs_val < 0)
+		{
+			DEBUG("BLTZ - taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.PC.putUInt32(addr);
+		}
+		else
+		{
+			DEBUG("BLTZ - not taking branch (offset: " + offset + ") rs_val: " + rs_val);
+			this.advancePC();
+		}
+	}	
+	
     this.SYSCALL = function ( op ) {
         DEBUG("SYSCALL");
         var v0_val = this.genRegisters[2].asUInt32();
