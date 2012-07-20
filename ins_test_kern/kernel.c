@@ -71,8 +71,11 @@ void kmain(void)
 {
 
     euler1();
+    print("completed euler1.\n");
     recursion();
+    print("completed recursion.\n");
     twiddle();
+    print("completed twiddle\n");
 
     forever_a_loop:
     goto forever_a_loop;

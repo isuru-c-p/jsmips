@@ -6,8 +6,8 @@ Disassembly of section .text:
 
 00001000 <.pic.kmain>:
     1000:	3c190000 	lui	t9,0x0
-    1004:	080004bd 	j	12f4 <kmain>
-    1008:	273912f4 	addiu	t9,t9,4852
+    1004:	080004be 	j	12f8 <kmain>
+    1008:	273912f8 	addiu	t9,t9,4856
     100c:	00000000 	nop
 
 00001010 <entry>:
@@ -39,7 +39,7 @@ Disassembly of section .text:
     1068:	afc0001c 	sw	zero,28(s8)
     106c:	24020001 	li	v0,1
     1070:	afc20018 	sw	v0,24(s8)
-    1074:	08000443 	j	110c <euler1+0xb8>
+    1074:	08000444 	j	1110 <euler1+0xbc>
     1078:	00000000 	nop
     107c:	8fc40018 	lw	a0,24(s8)
     1080:	3c025555 	lui	v0,0x5555
@@ -52,173 +52,186 @@ Disassembly of section .text:
     109c:	00021040 	sll	v0,v0,0x1
     10a0:	00431021 	addu	v0,v0,v1
     10a4:	00821823 	subu	v1,a0,v0
-    10a8:	1060000f 	beqz	v1,10e8 <euler1+0x94>
+    10a8:	10600010 	beqz	v1,10ec <euler1+0x98>
     10ac:	00000000 	nop
     10b0:	8fc40018 	lw	a0,24(s8)
     10b4:	3c026666 	lui	v0,0x6666
     10b8:	34426667 	ori	v0,v0,0x6667
     10bc:	00820018 	mult	a0,v0
-    10c0:	00001010 	mfhi	v0
-    10c4:	00021843 	sra	v1,v0,0x1
-    10c8:	000417c3 	sra	v0,a0,0x1f
-    10cc:	00621823 	subu	v1,v1,v0
-    10d0:	00601021 	move	v0,v1
-    10d4:	00021080 	sll	v0,v0,0x2
-    10d8:	00431021 	addu	v0,v0,v1
-    10dc:	00821823 	subu	v1,a0,v0
-    10e0:	14600006 	bnez	v1,10fc <euler1+0xa8>
-    10e4:	00000000 	nop
-    10e8:	8fc3001c 	lw	v1,28(s8)
-    10ec:	8fc20018 	lw	v0,24(s8)
-    10f0:	00000000 	nop
-    10f4:	00621021 	addu	v0,v1,v0
-    10f8:	afc2001c 	sw	v0,28(s8)
-    10fc:	8fc20018 	lw	v0,24(s8)
-    1100:	00000000 	nop
-    1104:	24420001 	addiu	v0,v0,1
-    1108:	afc20018 	sw	v0,24(s8)
-    110c:	8fc20018 	lw	v0,24(s8)
-    1110:	00000000 	nop
-    1114:	284203e8 	slti	v0,v0,1000
-    1118:	1440ffd8 	bnez	v0,107c <euler1+0x28>
-    111c:	00000000 	nop
-    1120:	8fc3001c 	lw	v1,28(s8)
-    1124:	3c020003 	lui	v0,0x3
-    1128:	34428ed0 	ori	v0,v0,0x8ed0
-    112c:	10620005 	beq	v1,v0,1144 <euler1+0xf0>
-    1130:	00000000 	nop
-    1134:	3c020000 	lui	v0,0x0
-    1138:	24442000 	addiu	a0,v0,8192
-    113c:	0c000408 	jal	1020 <print>
-    1140:	00000000 	nop
-    1144:	03c0e821 	move	sp,s8
-    1148:	8fbf0024 	lw	ra,36(sp)
-    114c:	8fbe0020 	lw	s8,32(sp)
-    1150:	27bd0028 	addiu	sp,sp,40
-    1154:	03e00008 	jr	ra
-    1158:	00000000 	nop
+    10c0:	00001812 	mflo	v1
+    10c4:	00001010 	mfhi	v0
+    10c8:	00021843 	sra	v1,v0,0x1
+    10cc:	000417c3 	sra	v0,a0,0x1f
+    10d0:	00621823 	subu	v1,v1,v0
+    10d4:	00601021 	move	v0,v1
+    10d8:	00021080 	sll	v0,v0,0x2
+    10dc:	00431021 	addu	v0,v0,v1
+    10e0:	00821823 	subu	v1,a0,v0
+    10e4:	14600006 	bnez	v1,1100 <euler1+0xac>
+    10e8:	00000000 	nop
+    10ec:	8fc3001c 	lw	v1,28(s8)
+    10f0:	8fc20018 	lw	v0,24(s8)
+    10f4:	00000000 	nop
+    10f8:	00621021 	addu	v0,v1,v0
+    10fc:	afc2001c 	sw	v0,28(s8)
+    1100:	8fc20018 	lw	v0,24(s8)
+    1104:	00000000 	nop
+    1108:	24420001 	addiu	v0,v0,1
+    110c:	afc20018 	sw	v0,24(s8)
+    1110:	8fc20018 	lw	v0,24(s8)
+    1114:	00000000 	nop
+    1118:	284203e8 	slti	v0,v0,1000
+    111c:	1440ffd7 	bnez	v0,107c <euler1+0x28>
+    1120:	00000000 	nop
+    1124:	8fc3001c 	lw	v1,28(s8)
+    1128:	3c020003 	lui	v0,0x3
+    112c:	34428ed0 	ori	v0,v0,0x8ed0
+    1130:	10620005 	beq	v1,v0,1148 <euler1+0xf4>
+    1134:	00000000 	nop
+    1138:	3c020000 	lui	v0,0x0
+    113c:	24442000 	addiu	a0,v0,8192
+    1140:	0c000408 	jal	1020 <print>
+    1144:	00000000 	nop
+    1148:	03c0e821 	move	sp,s8
+    114c:	8fbf0024 	lw	ra,36(sp)
+    1150:	8fbe0020 	lw	s8,32(sp)
+    1154:	27bd0028 	addiu	sp,sp,40
+    1158:	03e00008 	jr	ra
+    115c:	00000000 	nop
 
-0000115c <fib>:
-    115c:	27bdffd8 	addiu	sp,sp,-40
-    1160:	afbf0024 	sw	ra,36(sp)
-    1164:	afbe0020 	sw	s8,32(sp)
-    1168:	afb0001c 	sw	s0,28(sp)
-    116c:	03a0f021 	move	s8,sp
-    1170:	afc40028 	sw	a0,40(s8)
-    1174:	8fc30028 	lw	v1,40(s8)
-    1178:	24020001 	li	v0,1
-    117c:	14620004 	bne	v1,v0,1190 <fib+0x34>
-    1180:	00000000 	nop
-    1184:	24020001 	li	v0,1
-    1188:	08000479 	j	11e4 <fib+0x88>
-    118c:	00000000 	nop
-    1190:	8fc20028 	lw	v0,40(s8)
-    1194:	00000000 	nop
-    1198:	04410004 	bgez	v0,11ac <fib+0x50>
-    119c:	00000000 	nop
-    11a0:	00001021 	move	v0,zero
-    11a4:	08000479 	j	11e4 <fib+0x88>
-    11a8:	00000000 	nop
-    11ac:	8fc20028 	lw	v0,40(s8)
-    11b0:	00000000 	nop
-    11b4:	2442ffff 	addiu	v0,v0,-1
-    11b8:	00402021 	move	a0,v0
-    11bc:	0c000457 	jal	115c <fib>
-    11c0:	00000000 	nop
-    11c4:	00408021 	move	s0,v0
-    11c8:	8fc20028 	lw	v0,40(s8)
-    11cc:	00000000 	nop
-    11d0:	2442fffe 	addiu	v0,v0,-2
-    11d4:	00402021 	move	a0,v0
-    11d8:	0c000457 	jal	115c <fib>
-    11dc:	00000000 	nop
-    11e0:	02021021 	addu	v0,s0,v0
-    11e4:	03c0e821 	move	sp,s8
-    11e8:	8fbf0024 	lw	ra,36(sp)
-    11ec:	8fbe0020 	lw	s8,32(sp)
-    11f0:	8fb0001c 	lw	s0,28(sp)
-    11f4:	27bd0028 	addiu	sp,sp,40
-    11f8:	03e00008 	jr	ra
-    11fc:	00000000 	nop
+00001160 <fib>:
+    1160:	27bdffd8 	addiu	sp,sp,-40
+    1164:	afbf0024 	sw	ra,36(sp)
+    1168:	afbe0020 	sw	s8,32(sp)
+    116c:	afb0001c 	sw	s0,28(sp)
+    1170:	03a0f021 	move	s8,sp
+    1174:	afc40028 	sw	a0,40(s8)
+    1178:	8fc30028 	lw	v1,40(s8)
+    117c:	24020001 	li	v0,1
+    1180:	14620004 	bne	v1,v0,1194 <fib+0x34>
+    1184:	00000000 	nop
+    1188:	24020001 	li	v0,1
+    118c:	0800047a 	j	11e8 <fib+0x88>
+    1190:	00000000 	nop
+    1194:	8fc20028 	lw	v0,40(s8)
+    1198:	00000000 	nop
+    119c:	04410004 	bgez	v0,11b0 <fib+0x50>
+    11a0:	00000000 	nop
+    11a4:	00001021 	move	v0,zero
+    11a8:	0800047a 	j	11e8 <fib+0x88>
+    11ac:	00000000 	nop
+    11b0:	8fc20028 	lw	v0,40(s8)
+    11b4:	00000000 	nop
+    11b8:	2442ffff 	addiu	v0,v0,-1
+    11bc:	00402021 	move	a0,v0
+    11c0:	0c000458 	jal	1160 <fib>
+    11c4:	00000000 	nop
+    11c8:	00408021 	move	s0,v0
+    11cc:	8fc20028 	lw	v0,40(s8)
+    11d0:	00000000 	nop
+    11d4:	2442fffe 	addiu	v0,v0,-2
+    11d8:	00402021 	move	a0,v0
+    11dc:	0c000458 	jal	1160 <fib>
+    11e0:	00000000 	nop
+    11e4:	02021021 	addu	v0,s0,v0
+    11e8:	03c0e821 	move	sp,s8
+    11ec:	8fbf0024 	lw	ra,36(sp)
+    11f0:	8fbe0020 	lw	s8,32(sp)
+    11f4:	8fb0001c 	lw	s0,28(sp)
+    11f8:	27bd0028 	addiu	sp,sp,40
+    11fc:	03e00008 	jr	ra
+    1200:	00000000 	nop
 
-00001200 <recursion>:
-    1200:	27bdffe0 	addiu	sp,sp,-32
-    1204:	afbf001c 	sw	ra,28(sp)
-    1208:	afbe0018 	sw	s8,24(sp)
-    120c:	03a0f021 	move	s8,sp
-    1210:	2404000b 	li	a0,11
-    1214:	0c000457 	jal	115c <fib>
-    1218:	00000000 	nop
-    121c:	00401821 	move	v1,v0
-    1220:	24020059 	li	v0,89
-    1224:	10620005 	beq	v1,v0,123c <recursion+0x3c>
-    1228:	00000000 	nop
-    122c:	3c020000 	lui	v0,0x0
-    1230:	24442010 	addiu	a0,v0,8208
-    1234:	0c000408 	jal	1020 <print>
-    1238:	00000000 	nop
-    123c:	03c0e821 	move	sp,s8
-    1240:	8fbf001c 	lw	ra,28(sp)
-    1244:	8fbe0018 	lw	s8,24(sp)
-    1248:	27bd0020 	addiu	sp,sp,32
-    124c:	03e00008 	jr	ra
-    1250:	00000000 	nop
+00001204 <recursion>:
+    1204:	27bdffe0 	addiu	sp,sp,-32
+    1208:	afbf001c 	sw	ra,28(sp)
+    120c:	afbe0018 	sw	s8,24(sp)
+    1210:	03a0f021 	move	s8,sp
+    1214:	2404000b 	li	a0,11
+    1218:	0c000458 	jal	1160 <fib>
+    121c:	00000000 	nop
+    1220:	00401821 	move	v1,v0
+    1224:	24020059 	li	v0,89
+    1228:	10620005 	beq	v1,v0,1240 <recursion+0x3c>
+    122c:	00000000 	nop
+    1230:	3c020000 	lui	v0,0x0
+    1234:	24442010 	addiu	a0,v0,8208
+    1238:	0c000408 	jal	1020 <print>
+    123c:	00000000 	nop
+    1240:	03c0e821 	move	sp,s8
+    1244:	8fbf001c 	lw	ra,28(sp)
+    1248:	8fbe0018 	lw	s8,24(sp)
+    124c:	27bd0020 	addiu	sp,sp,32
+    1250:	03e00008 	jr	ra
+    1254:	00000000 	nop
 
-00001254 <twiddle>:
-    1254:	27bdffd8 	addiu	sp,sp,-40
-    1258:	afbf0024 	sw	ra,36(sp)
-    125c:	afbe0020 	sw	s8,32(sp)
-    1260:	03a0f021 	move	s8,sp
-    1264:	24020001 	li	v0,1
-    1268:	afc20018 	sw	v0,24(s8)
-    126c:	8fc20018 	lw	v0,24(s8)
-    1270:	00000000 	nop
-    1274:	000210c0 	sll	v0,v0,0x3
-    1278:	afc20018 	sw	v0,24(s8)
-    127c:	8fc20018 	lw	v0,24(s8)
-    1280:	00000000 	nop
-    1284:	00021043 	sra	v0,v0,0x1
-    1288:	afc20018 	sw	v0,24(s8)
-    128c:	8fc20018 	lw	v0,24(s8)
-    1290:	00000000 	nop
-    1294:	34421000 	ori	v0,v0,0x1000
-    1298:	afc20018 	sw	v0,24(s8)
-    129c:	8fc30018 	lw	v1,24(s8)
-    12a0:	2402fffa 	li	v0,-6
-    12a4:	00621026 	xor	v0,v1,v0
-    12a8:	afc20018 	sw	v0,24(s8)
-    12ac:	8fc20018 	lw	v0,24(s8)
-    12b0:	00000000 	nop
-    12b4:	3042ffff 	andi	v0,v0,0xffff
-    12b8:	afc20018 	sw	v0,24(s8)
-    12bc:	8fc30018 	lw	v1,24(s8)
-    12c0:	3402effe 	li	v0,0xeffe
-    12c4:	10620005 	beq	v1,v0,12dc <twiddle+0x88>
-    12c8:	00000000 	nop
-    12cc:	3c020000 	lui	v0,0x0
-    12d0:	24442028 	addiu	a0,v0,8232
-    12d4:	0c000408 	jal	1020 <print>
-    12d8:	00000000 	nop
-    12dc:	03c0e821 	move	sp,s8
-    12e0:	8fbf0024 	lw	ra,36(sp)
-    12e4:	8fbe0020 	lw	s8,32(sp)
-    12e8:	27bd0028 	addiu	sp,sp,40
-    12ec:	03e00008 	jr	ra
-    12f0:	00000000 	nop
+00001258 <twiddle>:
+    1258:	27bdffd8 	addiu	sp,sp,-40
+    125c:	afbf0024 	sw	ra,36(sp)
+    1260:	afbe0020 	sw	s8,32(sp)
+    1264:	03a0f021 	move	s8,sp
+    1268:	24020001 	li	v0,1
+    126c:	afc20018 	sw	v0,24(s8)
+    1270:	8fc20018 	lw	v0,24(s8)
+    1274:	00000000 	nop
+    1278:	000210c0 	sll	v0,v0,0x3
+    127c:	afc20018 	sw	v0,24(s8)
+    1280:	8fc20018 	lw	v0,24(s8)
+    1284:	00000000 	nop
+    1288:	00021043 	sra	v0,v0,0x1
+    128c:	afc20018 	sw	v0,24(s8)
+    1290:	8fc20018 	lw	v0,24(s8)
+    1294:	00000000 	nop
+    1298:	34421000 	ori	v0,v0,0x1000
+    129c:	afc20018 	sw	v0,24(s8)
+    12a0:	8fc30018 	lw	v1,24(s8)
+    12a4:	2402fffa 	li	v0,-6
+    12a8:	00621026 	xor	v0,v1,v0
+    12ac:	afc20018 	sw	v0,24(s8)
+    12b0:	8fc20018 	lw	v0,24(s8)
+    12b4:	00000000 	nop
+    12b8:	3042ffff 	andi	v0,v0,0xffff
+    12bc:	afc20018 	sw	v0,24(s8)
+    12c0:	8fc30018 	lw	v1,24(s8)
+    12c4:	3402effe 	li	v0,0xeffe
+    12c8:	10620005 	beq	v1,v0,12e0 <twiddle+0x88>
+    12cc:	00000000 	nop
+    12d0:	3c020000 	lui	v0,0x0
+    12d4:	24442028 	addiu	a0,v0,8232
+    12d8:	0c000408 	jal	1020 <print>
+    12dc:	00000000 	nop
+    12e0:	03c0e821 	move	sp,s8
+    12e4:	8fbf0024 	lw	ra,36(sp)
+    12e8:	8fbe0020 	lw	s8,32(sp)
+    12ec:	27bd0028 	addiu	sp,sp,40
+    12f0:	03e00008 	jr	ra
+    12f4:	00000000 	nop
 
-000012f4 <kmain>:
-    12f4:	27bdffe0 	addiu	sp,sp,-32
-    12f8:	afbf001c 	sw	ra,28(sp)
-    12fc:	afbe0018 	sw	s8,24(sp)
-    1300:	03a0f021 	move	s8,sp
-    1304:	0c000415 	jal	1054 <euler1>
-    1308:	00000000 	nop
-    130c:	0c000480 	jal	1200 <recursion>
-    1310:	00000000 	nop
-    1314:	0c000495 	jal	1254 <twiddle>
-    1318:	00000000 	nop
-    131c:	080004c7 	j	131c <kmain+0x28>
-    1320:	00000000 	nop
+000012f8 <kmain>:
+    12f8:	27bdffe0 	addiu	sp,sp,-32
+    12fc:	afbf001c 	sw	ra,28(sp)
+    1300:	afbe0018 	sw	s8,24(sp)
+    1304:	03a0f021 	move	s8,sp
+    1308:	0c000415 	jal	1054 <euler1>
+    130c:	00000000 	nop
+    1310:	3c020000 	lui	v0,0x0
+    1314:	24442038 	addiu	a0,v0,8248
+    1318:	0c000408 	jal	1020 <print>
+    131c:	00000000 	nop
+    1320:	0c000481 	jal	1204 <recursion>
+    1324:	00000000 	nop
+    1328:	3c020000 	lui	v0,0x0
+    132c:	2444204c 	addiu	a0,v0,8268
+    1330:	0c000408 	jal	1020 <print>
+    1334:	00000000 	nop
+    1338:	0c000496 	jal	1258 <twiddle>
+    133c:	00000000 	nop
+    1340:	3c020000 	lui	v0,0x0
+    1344:	24442064 	addiu	a0,v0,8292
+    1348:	0c000408 	jal	1020 <print>
+    134c:	00000000 	nop
+    1350:	080004d4 	j	1350 <kmain+0x58>
+    1354:	00000000 	nop
 	...
 
 Disassembly of section .rodata:
@@ -226,7 +239,7 @@ Disassembly of section .rodata:
 00002000 <.rodata>:
     2000:	6661696c 	0x6661696c
     2004:	65642065 	0x65642065
-    2008:	756c6572 	jalx	5b195c8 <ebss+0x5b17568>
+    2008:	756c6572 	jalx	5b195c8 <ebss+0x5b17528>
     200c:	20310a00 	addi	s1,at,2560
     2010:	72656375 	0x72656375
     2014:	7273696f 	0x7273696f
@@ -236,14 +249,30 @@ Disassembly of section .rodata:
     2024:	640a0000 	0x640a0000
     2028:	6661696c 	0x6661696c
     202c:	65642074 	0x65642074
-    2030:	77696464 	jalx	da59190 <ebss+0xda57130>
+    2030:	77696464 	jalx	da59190 <ebss+0xda570f0>
     2034:	6c650000 	0x6c650000
+    2038:	636f6d70 	0x636f6d70
+    203c:	6c657465 	0x6c657465
+    2040:	64206575 	0x64206575
+    2044:	6c657231 	0x6c657231
+    2048:	2e0a0000 	sltiu	t2,s0,0
+    204c:	636f6d70 	0x636f6d70
+    2050:	6c657465 	0x6c657465
+    2054:	64207265 	0x64207265
+    2058:	63757273 	0x63757273
+    205c:	696f6e2e 	0x696f6e2e
+    2060:	0a000000 	j	8000000 <ebss+0x7ffdf60>
+    2064:	636f6d70 	0x636f6d70
+    2068:	6c657465 	0x6c657465
+    206c:	64207477 	0x64207477
+    2070:	6964646c 	0x6964646c
+    2074:	650a0000 	0x650a0000
 	...
 
 Disassembly of section .reginfo:
 
-00002040 <ebss-0x20>:
-    2040:	20000000 	addi	zero,zero,0
+00002080 <ebss-0x20>:
+    2080:	20000000 	addi	zero,zero,0
 	...
 
 Disassembly of section .pdr:
@@ -263,28 +292,28 @@ Disassembly of section .pdr:
   34:	00000028 	0x28
   38:	0000001e 	0x1e
   3c:	0000001f 	0x1f
-  40:	0000115c 	0x115c
+  40:	00001160 	0x1160
   44:	c0010000 	lwc0	$1,0(zero)
   48:	fffffffc 	0xfffffffc
 	...
   54:	00000028 	0x28
   58:	0000001e 	0x1e
   5c:	0000001f 	0x1f
-  60:	00001200 	sll	v0,zero,0x8
+  60:	00001204 	0x1204
   64:	c0000000 	lwc0	$0,0(zero)
   68:	fffffffc 	0xfffffffc
 	...
   74:	00000020 	add	zero,zero,zero
   78:	0000001e 	0x1e
   7c:	0000001f 	0x1f
-  80:	00001254 	0x1254
+  80:	00001258 	0x1258
   84:	c0000000 	lwc0	$0,0(zero)
   88:	fffffffc 	0xfffffffc
 	...
   94:	00000028 	0x28
   98:	0000001e 	0x1e
   9c:	0000001f 	0x1f
-  a0:	000012f4 	0x12f4
+  a0:	000012f8 	0x12f8
   a4:	c0000000 	lwc0	$0,0(zero)
   a8:	fffffffc 	0xfffffffc
 	...
@@ -300,19 +329,15 @@ Disassembly of section .comment:
    8:	696c6472 	0x696c6472
    c:	6f6f7420 	0x6f6f7420
   10:	32303132 	andi	s0,s1,0x3132
-  14:	2e30352d 	sltiu	s0,s1,13613
-  18:	67333330 	0x67333330
-  1c:	35306361 	ori	s0,t1,0x6361
-  20:	2d646972 	sltiu	a0,t3,26994
-  24:	74792920 	jalx	1e4a480 <ebss+0x1e48420>
-  28:	342e352e 	ori	t6,at,0x352e
-  2c:	Address 0x000000000000002c is out of bounds.
+  14:	2e303529 	sltiu	s0,s1,13609
+  18:	20342e35 	addi	s4,at,11829
+  1c:	Address 0x000000000000001c is out of bounds.
 
 
 Disassembly of section .gnu.attributes:
 
 00000000 <.gnu.attributes>:
    0:	41000000 	bc0f	4 <.pic.kmain-0xffc>
-   4:	0f676e75 	jal	d9db9d4 <ebss+0xd9d9974>
+   4:	0f676e75 	jal	d9db9d4 <ebss+0xd9d9934>
    8:	00010000 	sll	zero,at,0x0
    c:	00070403 	sra	zero,a3,0x10
