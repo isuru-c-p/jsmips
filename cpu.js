@@ -303,7 +303,8 @@ function MipsCpu () {
 	    
 	}
 	
-	this.XOR = function ( op ) {
+	this.OR = function ( op ) {
+		DEBUG("OR");
 		var rs = getRs(op);
 		var rt = getRt(op);
 		var rd = getRd(op);
@@ -311,9 +312,8 @@ function MipsCpu () {
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();
 		
-		DEBUG("XOR");
+		this.genRegisters[rd].putUInt32(rs_val | rt_val);
 		
-		this.genRegisters[rd].putUInt32(rs_val ^ rt_val);
 		this.advancePC();
 	}
 	
@@ -330,6 +330,144 @@ function MipsCpu () {
 		
 		DEBUG("ORI rs: " + rs.toString(16) + ", rt: " + rt.toString(16) + ", c: " + c.toString(16) + ", rs_val: " + rs_val + ", result: " + this.genRegisters[rt].asUInt32());
 	}
+	
+	this.XOR = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var rd = getRd(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		DEBUG("XOR");
+		
+		this.genRegisters[rd].putUInt32(rs_val ^ rt_val);
+		this.advancePC();
+	}
+	
+	this.NOR = function ( op ) {
+		DEBUG("NOR");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var rd = getRd(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var result = ~(rs_val | rt_val);
+		this.genRegisters[rd].putUInt32(result);
+		
+		return;
+	}
+	
+	this.SLT = function ( op ){
+		DEBUG("SLT");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var rd = getRd(op);
+		
+		if(getSigned(rs_val) < getSigned(rt_val))
+		{
+			this.genRegisters[rd].putUInt32(1);	
+		}
+		else
+		{
+			this.genRegisters[rd].putUInt32(0);
+		}
+	
+		this.advancePC();
+	}
+	
+	this.SLTI = function ( op ){
+		DEBUG("SLTI");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var c = (op&0x0000ffff);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		//console.log("rt: " + rt + ", rs: " + rs + ", rs_val: " + rs_val + ", c: " + getSigned16(c));
+		
+		if(getSigned(rs_val) < getSigned16(c))
+		{
+			//console.log("set");
+			this.genRegisters[rt].putUInt32(1);
+		}
+		else
+		{
+			//console.log("not set");
+			this.genRegisters[rt].putUInt32(0);
+		}
+		
+		this.advancePC();
+	}
+	
+	this.SLTIU = function ( op ){
+		DEBUG("SLTIU");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var c = (op&0x0000ffff) >>> 0;
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		if(rs_val < c)
+		{
+			this.genRegisters[rt].putUInt32(1);
+		}
+		else
+		{
+			this.genRegisters[rt].putUInt32(0);
+		}
+		
+		this.advancePC();
+	}
+	
+	this.SLL = function ( op ){
+		DEBUG("SLL");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var sa = getSHAMT(op);
+		var val = this.genRegisters[rt].asUInt32() * Math.pow(2,sa);
+		
+		this.genRegisters[rd].putUInt32(val);
+		this.advancePC();
+	}
+	
+	this.SRL = function ( op ){
+		DEBUG("SRL");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var sa = getSHAMT(op);
+		var val = this.genRegisters[rt].asUInt32() >>> sa;
+		
+		this.genRegisters[rd].putUInt32(val);
+		this.advancePC();
+	}	
+	
+	this.SRA = function ( op ){
+		DEBUG("SRA");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var rt_val = this.genRegisters[rt].asUInt32();
+		var shamt = getSHAMT(op);
+		
+		var sign = (rt_val >>> 31);
+		var val = (rt_val & 0x7fffffff) >>> 0;
+		var shifted_val = (val >>> shamt);
+		
+		if(sign != 0)
+		{
+			var shamt_mask = (~(0xffffffff >>> shamt) >>> 0);
+			shifted_val = (shifted_val | shamt_mask);
+		}
+		
+		
+		this.genRegisters[rd].putUInt32(shifted_val);
+		this.advancePC();		
+	}	
 	
 	this.SUBU = function ( op ){
 		var rs = getRs(op);
@@ -511,79 +649,7 @@ function MipsCpu () {
 	    
 	}
 	
-	this.SLL = function ( op ){
-		DEBUG("SLL");
-		var rd = getRd(op);
-		var rt = getRt(op);
-		var sa = getSHAMT(op);
-		var val = this.genRegisters[rt].asUInt32() * Math.pow(2,sa);
-		
-		this.genRegisters[rd].putUInt32(val);
-		this.advancePC();
-	}
 	
-	this.SRA = function ( op ){
-		DEBUG("SRA");
-		var rd = getRd(op);
-		var rt = getRt(op);
-		var rt_val = this.genRegisters[rt].asUInt32();
-		var shamt = getSHAMT(op);
-		
-		var sign = (rt_val >>> 31);
-		var val = (rt_val & 0x7fffffff) >>> 0;
-		var shifted_val = (val >>> shamt);
-		
-		if(sign != 0)
-		{
-			var shamt_mask = (~(0xffffffff >>> shamt) >>> 0);
-			shifted_val = (shifted_val | shamt_mask);
-		}
-		
-		
-		this.genRegisters[rd].putUInt32(shifted_val);
-		this.advancePC();		
-	}
-	
-	this.SLTI = function ( op ){
-		var rs = getRs(op);
-		var rt = getRt(op);
-		var c = (op&0x0000ffff);
-		
-		var rs_val = this.genRegisters[rs].asUInt32();
-		//console.log("rt: " + rt + ", rs: " + rs + ", rs_val: " + rs_val + ", c: " + getSigned16(c));
-		
-		if(getSigned(rs_val) < getSigned16(c))
-		{
-			//console.log("set");
-			this.genRegisters[rt].putUInt32(1);
-		}
-		else
-		{
-			//console.log("not set");
-			this.genRegisters[rt].putUInt32(0);
-		}
-		
-		this.advancePC();
-	}
-	
-	this.SLTIU = function ( op ){
-		var rs = getRs(op);
-		var rt = getRt(op);
-		var c = (op&0x0000ffff) >>> 0;
-		
-		var rs_val = this.genRegisters[rs].asUInt32();
-		
-		if(rs_val < c)
-		{
-			this.genRegisters[rt].putUInt32(1);
-		}
-		else
-		{
-			this.genRegisters[rt].putUInt32(0);
-		}
-		
-		this.advancePC();
-	}	
 	
 	this.BNE = function ( op ) {
 		var rs = getRs(op);
