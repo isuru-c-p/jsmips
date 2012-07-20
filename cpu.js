@@ -666,6 +666,82 @@ function MipsCpu () {
 	    this.advancePC();
 	}
 	
+	this.LB = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LB");
+		
+		
+		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c);
+		var byteVal = this.mmu.readByte(this.genRegisters[rt].asUInt32());
+		var signed = (byteVal >>> 7);
+		
+		if(signed)
+		{
+			byteVal = (byteVal | 0xffffff00) >>> 0;
+		}
+		
+		this.genRegisters[rt].putUInt32(byteVal);
+		this.advancePC();
+	}	
+	
+	this.LBU = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LBU");
+		
+		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
+		this.genRegisters[rt].putUInt32(this.mmu.readByte(this.genRegisters[rt].asUInt32()));
+		this.advancePC();
+	}
+	
+	this.LH = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LH");
+		
+		
+		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c);
+		var halfwordVal = this.mmu.readHalfWord(this.genRegisters[rt].asUInt32());
+		var signed = (byteVal >>> 15);
+		
+		if(signed)
+		{
+			halfwordVal = (halfwordVal | 0xffff0000) >>> 0;
+		}
+		
+		this.genRegisters[rt].putUInt32(halfwordVal);
+		this.advancePC();
+	}	
+	
+	this.LHU = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LHU");
+		
+		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
+		this.genRegisters[rt].putUInt32(this.mmu.readHalfWord(this.genRegisters[rt].asUInt32()));
+		this.advancePC();
+	}
+	
+	this.LL = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LL");
+		var addr = this.genRegisters[rs].asUInt32()+c;
+		
+		this.genRegisters[rt].putUInt32(addr)
+		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
+		this.llAddrRegister.putUInt32(addr);
+		// TODO set LL whatever it is
+		this.advancePC();
+	}	
+	
 	this.LW = function ( op ){
 		var rt = getRt(op);
 		var rs = getRs(op);
@@ -673,13 +749,7 @@ function MipsCpu () {
 		DEBUG("LW");
 		
 		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
-				
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
-		
-		/*if(c == 28)
-		{
-			console.log("lw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt + ", c: " + c + ", address: " + (((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0));
-		}*/
 		this.advancePC();
 	}
 	

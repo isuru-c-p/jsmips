@@ -8,6 +8,25 @@
 
 function OctetBuffer ( arg ) {
 
+    this.getUInt16LE = function(n) {
+        return this.getByte(n+1) * Math.pow(2,8) +
+               this.getByte(n);
+    }
+    
+    this.putUInt16LE = function (n,val) {
+        
+        if(n >= this.size - 1 || n < 0 ){
+            throw ("invalid index into OctetBuffer - " + n);
+        }
+        
+        if(val > 4294967295 /* 2**32-1 */ || val < 0) {
+            throw ("invalid byte value - " + val );
+        }
+        
+        this.putByte( n ,  val &  0xff );
+        this.putByte( n+1, (val & 0xff00) >>> 8);        
+    }
+
 
     this.getUInt32BE = function (n) {
         return this.getByte(n+3) +

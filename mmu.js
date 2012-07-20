@@ -14,6 +14,16 @@ function Mmu(size) {
     //member cpu , to save space i wont make a setter. its set by the emu object
     this.physicalMemory = new OctetBuffer(size);
 
+	this.readHalfWord = function(address)
+	{
+		return this.physicalMemory.getUInt16LE(address);
+	}
+	
+    this.writeHalfWord = function(address, val)
+    {
+        this.physicalMemory.putUInt16LE(address, val);
+    }	
+
     this.readByte = function(address)
     {
         return this.physicalMemory.getByte(address);
