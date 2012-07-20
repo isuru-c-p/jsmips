@@ -9,11 +9,11 @@ function GeneralRegister() { // 32 bit register
     }
     
     this.putUInt32 = function ( val ) {
-        this.val = val >>> 0;
+        this.val = (val & 0xffffffff) >>> 0;
     }
     
     this.incr = function ( v ) {
-        this.val += v;
+        this.putUInt32(this.val+v);
     }
 
 }
@@ -312,6 +312,9 @@ function MipsCpu () {
 		
 		this.genRegisters[rt].putUInt32(rs_val | c);
 		this.advancePC();
+		
+		
+		DEBUG("ORI rs: " + rs.toString(16) + ", rt: " + rt.toString(16) + ", c: " + c.toString(16) + ", rs_val: " + rs_val + ", result: " + this.genRegisters[rt].asUInt32());
 	}
 	
 	this.SUBU = function ( op ){
@@ -323,13 +326,14 @@ function MipsCpu () {
 		var rt_val = this.genRegisters[rt].asUInt32();
 		
 		var result = (rs_val + twosComplement(rt_val)) >>> 0;
+		//var result = (rs_val - rt_val) >>> 0;
 		
 		this.genRegisters[rd].putUInt32(result);
 		this.advancePC();
 	}
 	
 	this.ADDIU = function ( op ){
-	    var imm = op&0x0000ffff;
+	    var imm = getSigned16(op&0x0000ffff);
 	    var rs = getRs(op);
 	    var rt = getRt(op);
 	    DEBUG("add reg "+rs + " with imm " + imm + " and save in reg " + rt );
@@ -347,7 +351,7 @@ function MipsCpu () {
 	    var rd = getRd(op);
 	    
 	    DEBUG("addu");
-	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rd].asUInt32();
+	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rs].asUInt32();
 	    res = res % 4294967296; // handle overflow
 	    this.genRegisters[rd].putUInt32(res);
 	    this.advancePC();
@@ -356,10 +360,10 @@ function MipsCpu () {
 	
 	this.MULT = function ( op ){
 		var rs = getRs(op);
-		var rd = getRd(op);
+		var rt = getRt(op);
 		
 		var number1 = this.genRegisters[rs].asUInt32();
-		var number2 = this.genRegisters[rd].asUInt32();
+		var number2 = this.genRegisters[rt].asUInt32();
 		
 		var sign = (number1/number1) * (number2/number2);
 				
@@ -392,14 +396,15 @@ function MipsCpu () {
 			this.HI.putUInt32(HI_val);
 			this.L0.putUInt32(LO_val);
 		}
-		
-		//console.log("Result: 0x"+result.toString(16)+", HI: 0x"+HI.toString(16)+", LO: 0x"+LO.toString(16));
+		//console.log("A: " + number1 + ", B:" + number2);
+		//console.log("Result: 0x"+result.toString(16)+", HI: 0x"+this.HI.asUInt32().toString(16)+", LO: 0x"+this.LO.asUInt32().toString(16));
 		this.advancePC();
 	}
 	
 	this.MFHI = function ( op ) {
 		var rd = getRd(op);
 		this.genRegisters[rd].putUInt32(this.HI.asUInt32());
+		//console.log("MFHI: " + this.genRegisters[rd].asUInt32());
 		this.advancePC();
 	}
 	
@@ -442,22 +447,32 @@ function MipsCpu () {
 	this.LW = function ( op ){
 		var rt = getRt(op);
 		var rs = getRs(op);
-		var c = (op&0x0000ffff);
-		DEBUG("LW loading word");
-		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rs].asUInt32()+c));
-		//console.log("lw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LW");
+		
+		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
+				
+		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
+		
+		/*if(c == 28)
+		{
+			console.log("lw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt + ", c: " + c + ", address: " + (((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0));
+		}*/
 		this.advancePC();
 	}
 	
 	this.SW = function ( op ){
 	
 	    DEBUG("SW storing word");
-	    var c = (op&0x0000ffff);
+	    var c = getSigned16(op&0x0000ffff);
         var rs = getRs(op);
 	    var rt = getRt(op);
-	    this.mmu.writeWord( this.genRegisters[rs].asUInt32() + c, this.genRegisters[rt].asUInt32()  );
-		//console.log("sw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt);
-	    this.advancePC();
+	    this.mmu.writeWord( (((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0), this.genRegisters[rt].asUInt32()  );
+		/*if(c == 28)
+		{
+			console.log("sw: " + this.genRegisters[rt].asUInt32() + ", rs: " + rs + ", rt: " + rt + ", c: " + c + ", address: " + (((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0));
+	    }*/
+		this.advancePC();
 	    
 	}
 	
@@ -473,15 +488,22 @@ function MipsCpu () {
 	}
 	
 	this.SRA = function ( op ){
-		DEBUG("SLA");
+		DEBUG("SRA");
 		var rd = getRd(op);
 		var rt = getRt(op);
 		var rt_val = this.genRegisters[rt].asUInt32();
 		var shamt = getSHAMT(op);
 		
-		var sign = (rt_val & 0x80000000) >>> 0;
+		var sign = (rt_val >>> 31);
 		var val = (rt_val & 0x7fffffff) >>> 0;
-		var shifted_val = ((val >>> shamt) | sign);
+		var shifted_val = (val >>> shamt);
+		
+		if(sign != 0)
+		{
+			var shamt_mask = (~(0xffffffff >>> shamt) >>> 0);
+			shifted_val = (shifted_val | shamt_mask);
+		}
+		
 		
 		this.genRegisters[rd].putUInt32(shifted_val);
 		this.advancePC();		
@@ -512,7 +534,7 @@ function MipsCpu () {
 	this.SLTIU = function ( op ){
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var c = (op&0x0000ffff);
+		var c = (op&0x0000ffff) >>> 0;
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		
@@ -571,7 +593,7 @@ function MipsCpu () {
 		}
 		else
 		{
-			DEBUG("BEQ - not taking branch");
+			DEBUG("BEQ - not taking branch (offset: " + offset + ") rs_val: " + rs_val + " rt_val: " + rt_val);
 			this.advancePC();
 		}
 	}
