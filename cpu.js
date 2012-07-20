@@ -353,7 +353,7 @@ function MipsCpu () {
 		var imm = (op&0x0000ffff);
 		
 		var result = this.genRegisters[rs].asUInt32();
-		result = ((result & 0x0000ffff) | imm) >>> 0;
+		result = ((result & 0x0000ffff) & imm) >>> 0;
 		
 		this.genRegisters[rt].putUInt32(result);
 		this.advancePC();
