@@ -491,6 +491,17 @@ function MipsCpu () {
 		this.advancePC();
 	}
 	
+	this.SLLV = function ( op ){
+		DEBUG("SLLV");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var sa = getSHAMT(op);
+		var val = (this.genRegisters[rt].asUInt32()&0x000001f) * Math.pow(2,sa);
+		
+		this.genRegisters[rd].putUInt32(val);
+		this.advancePC();
+	}
+	
 	this.SRL = function ( op ){
 		DEBUG("SRL");
 		var rd = getRd(op);
