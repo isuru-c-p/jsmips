@@ -335,6 +335,20 @@ function MipsCpu () {
 		
 		DEBUG("ORI rs: " + rs.toString(16) + ", rt: " + rt.toString(16) + ", c: " + c.toString(16) + ", rs_val: " + rs_val + ", result: " + this.genRegisters[rt].asUInt32());
 	}
+
+    this.SB = function ( op ){
+        var rs = getRs(op);
+        var rt = getRt(op);
+        var offset = getSigned16(op & 0x0000ffff);
+
+        var rs_val = (this.genRegisters[rs].asUInt32() & 0xff) >>> 0;
+
+        var addr = ((rs_val + offset) & 0xffffffff) >>> 0; 
+
+        this.mmu.writeByte(addr, rs_val);
+        
+        this.advancePC();
+    }
 	
 	this.XOR = function ( op ) {
 		var rs = getRs(op);
@@ -607,6 +621,21 @@ function MipsCpu () {
 		this.advancePC();
 	}
 
+    this.MUL = function ( op ) {
+        var HI_old = this.HI.asUInt32();
+        var LO_old = this.LO.asUInt32();
+
+        this.MULT(op);
+
+        var rd = getRd(op);
+        this.genRegisters[rd].putUInt32(this.LO.asUInt32());
+
+        this.HI.setUInt32(HI_old);
+        this.LO.setUInt32(LO_old);
+
+        // advancePC() done in this.MULT
+    }
+
     this.MADD = function ( op ) {
         var HI_old = this.HI.asUInt32();
         var LO_old = this.LO.asUInt32(); 
@@ -618,6 +647,8 @@ function MipsCpu () {
         
         this.LO.putUInt32(LO_sum);
         this.HI.putUInt32(HI_sum); 
+
+        // TODO: handle overflow
 
         // advancePC done in this.MULT
     }
@@ -712,6 +743,66 @@ function MipsCpu () {
         
         this.advancePC();
     }
+
+    this.MSUB = function ( op ){
+        DEBUG("MSUB");
+        var HI_old = this.HI.asUInt32();
+        var LO_old = this.LO.asUInt32();
+
+        this.MULT(op);
+
+        var HI_new = this.HI.asUInt32();
+        var LO_new = this.LO.asUInt32();
+
+
+        LO_new = (~LO_new & 0xffffffff) >>> 0;
+        LO_new += 1;
+        var carry = LO_new >> 32;
+        HI_new = (~HI_new & 0xffffffff) >>> 0;
+        HI_new += carry;
+
+
+        var LO_sum = LO_old + LO_new;
+        carry = LO_sum >> 32;
+        var HI_sum = HI_old + HI_new + carry;
+
+        this.HI.putUInt32(HI_sum);
+        this.LO.putUInt32(LO_sum);
+
+        // TODO: handle overflow exception
+
+        // advancePC() is done in this.MULT
+    }
+
+    this.MSUBU = function ( op ){
+        DEBUG("MSUBU");
+        var HI_old = this.HI.asUInt32();
+        var LO_old = this.LO.asUInt32();
+
+        this.MULT(op);
+
+        var HI_new = this.HI.asUInt32();
+        var LO_new = this.LO.asUInt32();
+
+
+        LO_new = (~LO_new & 0xffffffff) >>> 0;
+        LO_new += 1;
+        var carry = LO_new >> 32;
+        HI_new = (~HI_new & 0xffffffff) >>> 0;
+        HI_new += carry;
+
+
+        var LO_sum = LO_old + LO_new;
+        carry = LO_sum >> 32;
+        var HI_sum = HI_old + HI_new + carry;
+
+        this.HI.putUInt32(HI_sum);
+        this.LO.putUInt32(LO_sum);
+
+        // advancePC() is done in this.MULT
+    }
+
+
 	
 	this.J = function ( op ) {
         
