@@ -55,18 +55,28 @@ if (shouldTrace){
 emu.cpu.PC.putUInt32(entryPoint)
 
 
+PCLogCounter = 0;
+
 setInterval(function () {
 
+    PCLogCounter += 1;
     for(var i = 0 ; i < 500 ; i++){
+        
+        
         if(shouldTrace){
             tracer.writeTrace(emu);
             traceCount += 1;
-            if(traceCount > 100000000){
+            if(traceCount > 10000000){
                 ERROR("thats a large trace...")
                 process.exit(1);
             }
         }
         emu.step();
+    }
+    
+    if(PCLogCounter >= 10000){
+        PCLogCounter = 0;
+        INFO("PCsampler: " + emu.cpu.PC.asUInt32().toString(16))
     }
 
 }, 0)

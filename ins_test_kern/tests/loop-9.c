@@ -7,7 +7,7 @@ int false()
 
 extern void abort (void);
 
-int main (int argc,char *argv[])
+int main ()
 {
   int count = 0;
 

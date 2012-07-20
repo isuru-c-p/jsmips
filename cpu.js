@@ -389,8 +389,7 @@ function MipsCpu () {
 		
 		var result = ~(rs_val | rt_val);
 		this.genRegisters[rd].putUInt32(result);
-		
-		return;
+		this.advancePC();
 	}
 	
 	this.SLT = function ( op ){
@@ -495,9 +494,8 @@ function MipsCpu () {
 		DEBUG("SLLV");
 		var rd = getRd(op);
 		var rt = getRt(op);
-		var sa = getSHAMT(op);
-		var val = (this.genRegisters[rt].asUInt32()&0x000001f) * Math.pow(2,sa);
-		
+		var rs = getRs(op);
+		var val = (this.genRegisters[rt].asUInt32()) * Math.pow(2,this.genRegisters[rs].asUInt32()&0x0000001f);
 		this.genRegisters[rd].putUInt32(val);
 		this.advancePC();
 	}
@@ -511,7 +509,17 @@ function MipsCpu () {
 		
 		this.genRegisters[rd].putUInt32(val);
 		this.advancePC();
-	}	
+	}
+	
+	this.SRLV = function ( op ){
+		DEBUG("SRLV");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var val = (this.genRegisters[rt].asUInt32()) / Math.pow(2,this.genRegisters[rs].asUInt32()&0x0000001f);
+		this.genRegisters[rd].putUInt32(val);
+		this.advancePC();
+	}
 	
 	this.SRA = function ( op ){
 		DEBUG("SRA");
