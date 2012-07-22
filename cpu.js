@@ -341,11 +341,12 @@ function MipsCpu () {
         var rt = getRt(op);
         var offset = getSigned16(op & 0x0000ffff);
 
-        var rs_val = (this.genRegisters[rs].asUInt32() & 0xff) >>> 0;
+        var rs_val = this.genRegisters[rs].asUInt32();
 
         var addr = ((rs_val + offset) & 0xffffffff) >>> 0; 
+        var rt_val = (this.genRegisters[rt].asUInt32() & 0xff) >>> 0;
 
-        this.mmu.writeByte(addr, rs_val);
+        this.mmu.writeByte(addr, rt_val);
         
         this.advancePC();
     }
