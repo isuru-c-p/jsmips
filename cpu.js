@@ -1120,7 +1120,7 @@ function MipsCpu () {
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
 				
-		this.genRegisters[rt].putUInt32(wordlVal | rt_val);
+		this.genRegisters[rt].putUInt32(wordVal | rt_val);
 		this.advancePC();
 	}	
 	
@@ -1146,7 +1146,7 @@ function MipsCpu () {
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
 				
-		this.genRegisters[rt].putUInt32(wordlVal | rt_val);
+		this.genRegisters[rt].putUInt32(wordVal | rt_val);
 		this.advancePC();
 	}		
 	
