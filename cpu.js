@@ -877,7 +877,26 @@ function MipsCpu () {
         // advancePC() is done in this.MULT
     }
 
-
+	this.MTHI = function ( op ){
+		DEBUG("MTHI");
+		
+		var rs = getRs(op);
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		this.HI.putUInt32(rs_val);
+		this.advancePC();
+	}
+	
+	this.MTLO = function ( op ){
+		DEBUG("MTLO");
+		
+		var rs = getRs(op);
+		var rs_val = this.genRegisters[rs].asUInt32();
+		
+		this.LO.putUInt32(rs_val);
+		this.advancePC();
+	}
+	
 	
 	this.J = function ( op ) {
         
