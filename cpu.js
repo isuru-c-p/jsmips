@@ -650,6 +650,29 @@ function MipsCpu () {
 		this.advancePC();		
 	}	
 	
+	this.SUB = function ( op ){
+		var rs = getRs(op);
+		var rd = getRd(op);
+		var rt = getRt(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var result = (rs_val + twosComplement(rt_val)) >>> 0;
+		//var result = (rs_val - rt_val) >>> 0;
+		
+		if(result < Math.pow(2,32))
+		{
+			this.genRegisters[rd].putUInt32(result);
+		}
+		else
+		{
+			// TODO trigger overflow exception
+		}
+		
+		this.advancePC();
+	}	
+	
 	this.SUBU = function ( op ){
 		var rs = getRs(op);
 		var rd = getRd(op);
