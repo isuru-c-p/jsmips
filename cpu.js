@@ -1098,6 +1098,58 @@ function MipsCpu () {
 		this.advancePC();
 	}
 	
+	this.LWL = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LWL");
+		
+		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var wordVal = this.mmu.readWord(address);
+		var rt_val = this.genRegisters[rt].asUInt32();
+		var bytesinBoundary = 4 - (address % 4);
+		var wordMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+		
+		if(this.getEndianness() == 1)
+		{
+			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+		}
+		
+		rtMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		
+		wordVal = (wordVal & wordMaskVal);
+		rt_val = (rt_val & rtMaskVal);
+				
+		this.genRegisters[rt].putUInt32(wordlVal | rt_val);
+		this.advancePC();
+	}	
+	
+	this.LWR = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("LWR");
+		
+		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var wordVal = this.mmu.readWord(address);
+		var rt_val = this.genRegisters[rt].asUInt32();
+		var bytesinBoundary = (address % 4);
+		var wordMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+		
+		if(this.getEndianness() == 0)
+		{
+			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+		}
+		
+		rtMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		
+		wordVal = (wordVal & wordMaskVal);
+		rt_val = (rt_val & rtMaskVal);
+				
+		this.genRegisters[rt].putUInt32(wordlVal | rt_val);
+		this.advancePC();
+	}		
+	
 	this.SW = function ( op ){
 	
 	    DEBUG("SW storing word");
