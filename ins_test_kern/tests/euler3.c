@@ -31,7 +31,7 @@ main ()
     int i;
     int max = 0;
     for(i = 1 ; i < 775146 ; i+= 2){
-        if(3 % i == 0){
+        if(N % i == 0){
             if(isPrime(i)){
                 max = i;
             }
