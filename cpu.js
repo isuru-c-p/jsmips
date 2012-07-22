@@ -547,6 +547,19 @@ function MipsCpu () {
 		this.advancePC();
 	}
 	
+	this.SH = function ( op ){
+		var rt = getRt(op);
+		var rs = getRs(op);
+		var c = getSigned16(op&0x0000ffff);
+		DEBUG("SH");
+		
+		var address = ((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0;
+		var rt_val = this.genRegistesr[rt].asUInt32();
+		
+		this.mmu.writeHalfWord(address, rt_val);
+		this.advancePC();		
+	}
+	
 	this.SLL = function ( op ){
 		DEBUG("SLL");
 		var rd = getRd(op);
