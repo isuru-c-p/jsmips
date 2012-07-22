@@ -18,6 +18,7 @@ function Tracer( fname ) {
     this.HI = 0;
     this.LO = 0;
     this.OP = 0;
+    this.DS = 0;
     
 
     this.writeTrace = function(emu) {
@@ -36,6 +37,12 @@ function Tracer( fname ) {
             this.OP = emu.mmu.readWord(this.PC);
             out += "+OP=" + this.OP.toString(16)+ '\n';
         }
+        
+        if(this.DS != emu.mmu.readWord(this.PC+4)){
+            out += "-DS=" + this.DS.toString(16)+ '\n';
+            this.DS = emu.mmu.readWord(this.PC+4);
+            out += "+DS=" + this.DS.toString(16)+ '\n';
+        }        
         
         if(this.HI != emu.cpu.HI.asUInt32()){
             

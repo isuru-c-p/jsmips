@@ -16,11 +16,13 @@ def disassemble(opcode):
 class Trace(object):
     def __init__(self,tracefile):
         self.traceData = open(tracefile).read().split('#')[:-1]
+        self.traceData = [d.split('\n') for d in self.traceData]
         self.pos = 0
         self.LO = 0
         self.HI = 0
         self.PC = 0
         self.OP = 0
+        self.DS = 0
         self.genRegs = [0 for i in range(32)]
         self.breakPoints = set([])
         self.dissassemblyCache = {}
@@ -37,6 +39,13 @@ class Trace(object):
                     raise Exception("self modifying code unsupported")
             else:
                 self.dissassemblyCache[self.PC] = [self.OP,disassemble(self.OP)]
+  
+            if self.PC + 4 in self.dissassemblyCache:
+                if self.DS != self.dissassemblyCache[self.PC+4][0]:
+                    raise Exception("self modifying code unsupported")
+            else:
+                self.dissassemblyCache[self.PC + 4] = [self.DS,disassemble(self.DS)]              
+            
 
         while True:
             try:
@@ -66,19 +75,28 @@ class Trace(object):
         if self.pos == len(self.traceData):
             self.pos -= 1
             
-        for l in self.traceData[self.pos].split('\n'):
+            
+        for l in self.traceData[self.pos]:
             if l.startswith(d+'PC='):
                 self.PC=int(l[4:],16)
-            if l.startswith(d+'HI='):
-                self.HI=int(l[4:],16)
-            if l.startswith(d+'LO='):
-                self.LO=int(l[4:],16)
+                continue
             if l.startswith(d+'OP='):
                 self.OP=int(l[4:],16)
+                continue
+            if l.startswith(d+'DS='):
+                self.DS=int(l[4:],16)
+                continue
+            if l.startswith(d+'HI='):
+                self.HI=int(l[4:],16)
+                continue
+            if l.startswith(d+'LO='):
+                self.LO=int(l[4:],16)
+                continue
             for i in range(32):
                 s=d+'GR'+str(i)+'='
                 if l.startswith(s):
                     self.genRegs[i] = int(l[len(s):],16)
+                    break
         if d == '+':
             self.pos += 1
         if d == '-':
@@ -91,7 +109,7 @@ class Trace(object):
         self.breakPoints.remove(int(addr,16))
         
     def listBreakPoints(self):
-        ret = "BreakPoints:"
+        ret = "BreakPoints:\n"
         for b in self.breakPoints:
             ret += " %08X\n"%b
         return ret

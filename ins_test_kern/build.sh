@@ -1,14 +1,14 @@
 set -e
 
-
+O="-O1"
 
 
 buildKernel () {
 
     NAME=`basename $1 .c`
-    mips-linux-gcc -mno-abicalls -fno-pic  -o kernel_common.o -c kernel.c  -Wall -Wextra  \
-        -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
-    mips-linux-gcc -mno-abicalls -fno-pic  -o kernel_$NAME.o -c $1 -Wall -Wextra \
+    mips-linux-gcc $O -mno-abicalls -fno-pic  -o kernel_common.o -c kernel.c  -Wall -Wextra  \
+        -nostdlib  -fno-builtin -nostartfiles -nodefaultlibs
+    mips-linux-gcc $O -mno-abicalls -fno-pic  -o kernel_$NAME.o -c $1 -Wall -Wextra \
         -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
     mips-linux-as -o entry.o entry.s
     mips-linux-ld -T linker.ld -o kernel_$NAME.bin entry.o kernel_$NAME.o kernel_common.o
