@@ -308,6 +308,73 @@ function MipsCpu () {
 	    
 	}
 	
+	this.ADD = function ( op ) {
+		DEBUG("ADD");
+		var rs = getRs(op);
+		var rt = getRt(op);
+		var rd = getRd(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		var result = rs_val + rt_val;
+		if(result < Math.pow(2,32))
+		{
+			this.genRegisters[rd].putUInt32(result);
+		}
+		else
+		{
+			// TODO Overflow trap
+		}
+		
+		this.advancePC();
+	}
+	
+	this.ADDI = function ( op ){
+	    var imm = getSigned16(op&0x0000ffff);
+	    var rs = getRs(op);
+	    var rt = getRt(op);
+	    DEBUG("ADDI reg "+rs + " with imm " + imm + " and save in reg " + rt );
+	    var result = this.genRegisters[rs].asUInt32() + imm;
+	    //res = res % 4294967296; // handle overflow
+		
+		if(result < Math.pow(2,32))
+		{
+			this.genRegisters[rt].putUInt32(result);
+		}
+		else
+		{
+			// TODO Overflow trap
+		}
+		
+	    this.advancePC();
+	}	
+	
+	this.ADDIU = function ( op ){
+	    var imm = getSigned16(op&0x0000ffff);
+	    var rs = getRs(op);
+	    var rt = getRt(op);
+	    DEBUG("ADDIU reg "+rs + " with imm " + imm + " and save in reg " + rt );
+	    var res = this.genRegisters[rs].asUInt32() + imm;
+	    res = res % 4294967296; // handle overflow
+	    this.genRegisters[rt].putUInt32(res);
+	    
+		this.advancePC();
+	}
+	
+	this.ADDU = function ( op ){
+	    
+	    var rs = getRs(op);
+	    var rt = getRt(op);
+	    var rd = getRd(op);
+	    
+	    DEBUG("addu");
+	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rs].asUInt32();
+	    res = res % 4294967296; // handle overflow
+	    this.genRegisters[rd].putUInt32(res);
+	    this.advancePC();
+	    
+	}
+	
 	this.OR = function ( op ) {
 		DEBUG("OR");
 		var rs = getRs(op);
@@ -584,32 +651,6 @@ function MipsCpu () {
 		
 		this.genRegisters[rt].putUInt32(result);
 		this.advancePC();
-	}
-	
-	this.ADDIU = function ( op ){
-	    var imm = getSigned16(op&0x0000ffff);
-	    var rs = getRs(op);
-	    var rt = getRt(op);
-	    DEBUG("add reg "+rs + " with imm " + imm + " and save in reg " + rt );
-	    var res = this.genRegisters[rs].asUInt32() + imm;
-	    res = res % 4294967296; // handle overflow
-	    this.genRegisters[rt].putUInt32(res);
-	    this.advancePC();
-	    
-	}
-	
-	this.ADDU = function ( op ){
-	    
-	    var rs = getRs(op);
-	    var rt = getRt(op);
-	    var rd = getRd(op);
-	    
-	    DEBUG("addu");
-	    var res = this.genRegisters[rt].asUInt32() + this.genRegisters[rs].asUInt32();
-	    res = res % 4294967296; // handle overflow
-	    this.genRegisters[rd].putUInt32(res);
-	    this.advancePC();
-	    
 	}
 	
 	this.MULT = function ( op ){
