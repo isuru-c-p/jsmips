@@ -624,6 +624,32 @@ function MipsCpu () {
 		this.advancePC();		
 	}	
 	
+	this.SRAV = function ( op ){
+		DEBUG("SRAV");
+		var rd = getRd(op);
+		var rt = getRt(op);
+		var rs = getRs(op);
+		
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		var shamt = (rs_val & 0x1f) >>> 0;
+		
+		var sign = (rt_val >>> 31);
+		var val = (rt_val & 0x7fffffff) >>> 0;
+		var shifted_val = (val >>> shamt);
+		
+		if(sign != 0)
+		{
+			var shamt_mask = (~(0xffffffff >>> shamt) >>> 0);
+			shifted_val = (shifted_val | shamt_mask);
+		}
+		
+		
+		this.genRegisters[rd].putUInt32(shifted_val);
+		this.advancePC();		
+	}	
+	
 	this.SUBU = function ( op ){
 		var rs = getRs(op);
 		var rd = getRd(op);
