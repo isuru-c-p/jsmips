@@ -7,7 +7,7 @@ if __name__ == "__main__":
 		print "Error, hex file must have .hex extension"
 		sys.exit(0)
 
-	entryPointFileName = hexFileName.split(".")[-2] + ".entry"
+	entryPointFileName = ".".join(hexFileName.split(".")[:-1]) + ".entry"
 	entryPoint = open(entryPointFileName).read()
 	try:
 		int(entryPoint,16)
