@@ -800,7 +800,13 @@ function MipsCpu () {
         {
             LO_old = ((~LO_old & 0xffffffff) >>> 0);
             LO_old += 1;
-            var carry = LO_old >>> 32;
+			var carry = 0;
+			
+			if(LO_old >= Math.pow(2,32))
+			{
+				carry = 1;
+			}
+			
             HI_old = ((~HI_old & 0xffffffff) >>> 0) + carry; 
         }
 
@@ -815,7 +821,13 @@ function MipsCpu () {
         {
             LO_new = ((~LO_new & 0xffffffff) >>> 0);
             LO_new += 1;
-            var carry = LO_new >>> 32;
+			var carry = 0;
+			
+			if(LO_new >= Math.pow(2,32))
+			{
+				carry = 1;
+			}
+			
             HI_new = ((~HI_new & 0xffffffff) >>> 0) + carry; 
         }
 
