@@ -838,6 +838,16 @@ function MipsCpu () {
         this.advancePC();
     }
 	
+    this.MTC0 = function ( op ) {
+        DEBUG("MFC0");
+        var rt = getRt(op);
+        var cd = getRd(op);
+		var rt_val = this.genRegisters[rt].asUInt32();
+		
+		this.C0Registers[cd].putUInt32(rt_val);
+        this.advancePC();
+    }	
+	
 	this.MFHI = function ( op ) {
         DEBUG("MFHI");
 		var rd = getRd(op);
