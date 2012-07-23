@@ -1,4 +1,5 @@
 fs = require('fs')
+net = require('net')
 
 
 function extractArgument( arg, defaultVal  ) {
@@ -14,69 +15,189 @@ function extractArgument( arg, defaultVal  ) {
 }
 
 
-var image = extractArgument("--image","")
+var dbgport = extractArgument("--dbgport","8123")
+var uartPort = extractArgument("--uartport","8124")
 
-if(image == ""){
-    ERROR("cannot run without an image!");
-    process.exit(1);
+dbgport = parseInt(dbgport)
+uartPort = parseInt(uartPort)
+
+INFO("debug listening on port -- " + dbgport);
+INFO("uart listening on port -- " + uartPort);
+ERROR("uart UNIMPLEMENTED");
+
+emu = 0;
+
+function reset() {
+    emu = new Emulator()
 }
 
-INFO("loading image : " + image);
+reset();
 
-var entryPoint =extractArgument("--entrypoint","");
+commands = new Array();
+commandLUT = {};
 
-if(entryPoint == ""){
-    ERROR("cannot run without an entry point!");
-    process.exit(1);
-}
-
-entryPoint =  parseInt(entryPoint,16);
-
-
-INFO("loading image with entry point: " + entryPoint.toString(16));
-
-var tracefile = extractArgument("--tracefile","")
-var shouldTrace = false;
-if(tracefile == "") {
-    INFO("Not tracing emulator");
-} else {
-    shouldTrace = true;
-    INFO("saving a trace to file: " + tracefile)
+function addCommand(name,fun){
+    commands.push(name)
+    commandLUT[name] = fun;
 }
 
 
-emu = new Emulator()
-emu.mmu.physicalMemory.loadHexString(new String(fs.readFileSync(image)),0)
 
-if (shouldTrace){
-    tracer = new Tracer(tracefile);
-    var traceCount = 0;
+// START debugging interface
+
+
+addCommand("setll", function (s,command) {
+    arg = command.split(" ")[1];
+    LOG_LEVEL = parseInt(arg);
+    s.write("ok\n");
+
+});
+
+
+
+addCommand("reset", function (s,command) {
+
+    reset()
+    s.write("ok\n");
+
+});
+
+
+addCommand("step", function (s,command) {
+
+    emu.step();
+    s.write("ok\n");
+
+});
+
+
+isRunning = false;
+runIntervalId = 0;
+
+function breakExecution() {
+    INFO("break!");
+    if(isRunning){
+        clearInterval(runIntervalId);
+    }
+    isRunning = false;
+
 }
-emu.cpu.PC.putUInt32(entryPoint)
 
 
-PCLogCounter = 0;
+addCommand("isrunning", function (s,command) {
+    if(isRunning) {
+        s.write("ok 1\n");
+    } else {
+        s.write("ok 0\n");
+    }
 
-setInterval(function () {
+});
 
-    PCLogCounter += 1;
-    for(var i = 0 ; i < 500 ; i++){
-        
-        
-        if(shouldTrace){
-            tracer.writeTrace(emu);
-            traceCount += 1;
-            if(traceCount > 10000000){
-                ERROR("thats a large trace...")
-                process.exit(1);
+
+addCommand("run", function (s,command) {
+    isRunning = true;
+    setInterval( function () {
+        for ( var i = 0 ; i < 50 ; i++ ) {
+            if(isRunning){
+                emu.step();
             }
         }
-        emu.step();
+    } , 1);
+    
+    s.write("ok\n");
+
+});
+
+addCommand("break", function (s,command) {
+    breakExecution();
+    s.write("ok\n");
+
+});
+
+
+addCommand("readreg", function (s,command) {
+    arg = command.split(" ")[1];
+    var val = 0;
+    
+    for(var i = 0 ; i < 32 ; i++){
+        if(arg == "GR"+i.toString(10)){
+            val = emu.cpu.genRegisters[i].asUInt32();
+            s.write("ok "+ val.toString(16) +'\n');
+            return;
+        }
+    
     }
     
-    if(PCLogCounter >= 10000){
-        PCLogCounter = 0;
-        INFO("PCsampler: " + emu.cpu.PC.asUInt32().toString(16))
+    if(arg == "PC"){
+        val = emu.cpu.PC.asUInt32();
+    } else if (arg == "HI") {
+        val = emu.cpu.HI.asUInt32();
+    } else if (arg == "LO") {
+        val = emu.cpu.LO.asUInt32();
+    } else {
+        s.write("ERROR: badreg\n");
+        return;    
     }
 
-}, 0)
+    s.write("ok "+ val.toString(16) +'\n');
+});
+
+addCommand("readb", function (s,command) {
+    var addr = command.split(" ")[1];
+    addr = parseInt(addr,16);
+    
+    var limit = emu.mmu.getPhysicalSize();
+    
+    if(addr < 0 || addr >= limit){
+        return "ERROR: badaddr";
+    }
+    
+    var val = emu.mmu.readByte(addr);
+
+    s.write("ok "+ val.toString(16) +'\n');
+});
+
+
+addCommand("shutdown", function(s,command){
+    INFO("closing emulator server");
+    s.write("ok\n")
+    process.exit(0);
+});
+
+// END debugging interface
+
+
+
+function handleCommand(data) {
+
+    data = new String(data).split("\n")[0];
+    INFO("got command - " + data);
+    for(var i = 0 ; i < commands.length ; i++){
+        if(data.substr(0,commands[i].length) == commands[i]) {
+            INFO("executing command " + commands[i]);
+            commandLUT[commands[i]](this,data);
+            return;
+        }
+    }
+
+    this.write("ERROR unknown command - " + data + "\n");
+}
+
+
+var dbgserver = net.createServer(function(c) { //'connection' listener
+
+  c.on('end', function() {
+    INFO('debugger disconnected');
+  });
+  
+  c.on('connect', function() {
+    INFO('debugger connected');
+  });
+
+  c.on("data", handleCommand);
+
+});
+
+dbgserver.listen(8123, function() { //'listening' listener
+    console.log('server bound');
+});
