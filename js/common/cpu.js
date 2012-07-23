@@ -1708,7 +1708,7 @@ function MipsCpu () {
                 characterInt = this.mmu.readByte(a0_val+1);
             }
 
-            console.log(stringToPrint);
+            terminal(stringToPrint);
         }
         
         if(v0_val == 5)

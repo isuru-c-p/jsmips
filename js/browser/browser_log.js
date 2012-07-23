@@ -1,25 +1,31 @@
 LOG_LEVEL = 1
 
+function terminal(output)
+{
+    $('.terminal-output').append(output.replace("\n","<br/>").replace("\r","<br/>"));
+}
+
+
 function DEBUG (m) {
     if(LOG_LEVEL <= 0){
-        $('#terminal').append("DEBUG: " + m + "<br/>");
+        terminal("DEBUG: " + m + "<br/>");
     }
 }
 
 function INFO(m) {
     if(LOG_LEVEL <= 1){
-        $('#terminal').append("INFO: " + m + "<br/>");
+        terminal("INFO: " + m + "<br/>");
     }
 }
 
 function WARN(m) {
     if(LOG_LEVEL <= 2){
-        $('#terminal').append("WARN: " + m + "<br/>");
+        terminal("WARN: " + m + "<br/>");
     }
 }
 
 function ERROR(m) {
     if(LOG_LEVEL <= 3){
-        $('#terminal').append("ERROR: " + m + "<br/>");
+        terminal("ERROR: " + m + "<br/>");
     }
 }

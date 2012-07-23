@@ -1,5 +1,9 @@
 LOG_LEVEL = 1
 
+function terminal(m) {
+    console.log(m);
+}
+
 function DEBUG (m) {
     if(LOG_LEVEL <= 0){
         console.log("DEBUG: " + m)
