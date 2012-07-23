@@ -1,0 +1,36 @@
+.terminal {
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+	min-height: 300px; width: 50%;
+}
+.terminal .terminal-output div {
+    display: block;
+}
+.terminal, .terminal .terminal-output, .terminal .terminal-output div,
+.terminal .terminal-output div div, .cmd, .terminal .cmd span, .terminal .cmd div {
+    font-family: monospace;
+    color: #aaa;
+    background-color: #000;
+    font-size: 12px;
+    line-height: 16px;
+}
+.terminal span {
+    float: left;
+}
+.terminal span.inverted {
+    background-color: #aaa;
+    color: #000;
+}
+.terminal div::-moz-selection, .terminal span::-moz-selection {
+    background-color: #aaa;
+    color: #000;
+}
+.terminal div::selection, .terminal span::selection {
+    background-color: #aaa;
+    color: #000;
+}
+.terminal .terminal-output div.error, .terminal .terminal-output div.error div {
+    color: red;
+}
+                    
