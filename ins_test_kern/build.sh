@@ -11,7 +11,7 @@ buildKernel () {
     mips-linux-gcc $O -mno-abicalls -fno-pic  -o kernel_$NAME.o -c $1 -Wall -Wextra \
         -nostdlib -fno-builtin -nostartfiles -nodefaultlibs
     mips-linux-as -o entry.o entry.s
-    mips-linux-ld -T linker.ld -o kernel_$NAME.bin entry.o kernel_$NAME.o kernel_common.o
+    mips-linux-ld -T linker.ld -o kernel_$NAME.bin entry.o kernel_$NAME.o kernel_common.o libgcc.a
     mips-linux-objdump -D kernel_$NAME.bin > kernel_$NAME.map
     python tohex.py kernel_$NAME.bin > kernel_$NAME.hex
     echo `mips-linux-nm kernel_$NAME.bin | grep entry | cut -c 1-8` > kernel_$NAME.entry
