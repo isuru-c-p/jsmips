@@ -2,7 +2,8 @@ import os
 import subprocess
 
 targets = [
-    "node_4kc.parts",
+    "./node/node_4kc.parts",
+    "./browser/browser_4kc.parts"
 ]
 
 
@@ -18,7 +19,7 @@ def buildFile(partsfile):
     out.close()
             
 curDir = os.getcwd()
-os.chdir("autogen")
+os.chdir("common/autogen")
 subprocess.check_call(['python','build.py'])
 os.chdir(curDir)
 

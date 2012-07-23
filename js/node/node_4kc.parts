@@ -1,0 +1,8 @@
+./common/OctetBuffer.js
+./node/node_log.js
+./common/autogen/doOp.autogen
+./common/cpu.js
+./common/mmu.js
+./common/Emu.js
+./node/node_tracer.js
+./node/node_main.js
