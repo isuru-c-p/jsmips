@@ -19,7 +19,6 @@ function Mmu(size) {
     this.addressTranslation = function(va, write) {
         function tlbLookup(addr, wr) {
            var asid = this.cpu.EntryHiReg.ASID;
-           var g = addr >>> 31;
            var vpn = addr >>> 12;
            var tlb = this.tlb;
            for(i = 0; i < 64; i+= 4)
