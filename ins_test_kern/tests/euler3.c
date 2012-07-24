@@ -28,6 +28,7 @@ int isPrime(int n){
 int
 main ()
 {
+    print("Starting euler3.");
     int i;
     int max = 0;
     for(i = 1 ; i < 775146 ; i+= 2){
@@ -39,7 +40,10 @@ main ()
     }
     
     if(max != 6857)
+    {
+	print("Failed");
         return 1;
-    
+    }
+    print("Success!");
     return 0;
 }

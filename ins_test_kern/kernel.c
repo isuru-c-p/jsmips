@@ -2,6 +2,10 @@
 int main();
 
 
+long __moddi3(long a,long n){
+    
+}
+
 void print(char * s){
     
     asm("move $a0,%0\n"

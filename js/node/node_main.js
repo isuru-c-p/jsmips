@@ -142,6 +142,37 @@ addCommand("readreg", function (s,command) {
     s.write("ok "+ val.toString(16) +'\n');
 });
 
+addCommand("writereg", function (s,command) {
+    var arg = command.split(" ")[1];
+    var val = parseInt(command.split(" ")[2],16);
+    
+    for(var i = 0 ; i < 32 ; i++){
+        if(arg == "GR"+i.toString(10)){
+            val = emu.cpu.genRegisters[i].putUInt32(val);
+            s.write("ok\n");
+            return;
+        }
+    
+    }
+    
+    if(arg == "PC"){
+        emu.cpu.PC.putUInt32(val);
+    } else if (arg == "HI") {
+        emu.cpu.HI.putUInt32(val);
+    } else if (arg == "LO") {
+        emu.cpu.LO.putUInt32(val);
+    } else {
+        s.write("ERROR: badreg\n");
+        return;    
+    }
+    s.write("ok\n");
+});
+
+
+addCommand("physmemsize", function (s,command) {
+    s.write("ok " + emu.mmu.getPhysicalSize().toString(16) + '\n');
+})
+
 addCommand("readb", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
@@ -149,12 +180,35 @@ addCommand("readb", function (s,command) {
     var limit = emu.mmu.getPhysicalSize();
     
     if(addr < 0 || addr >= limit){
-        return "ERROR: badaddr";
+        s.write("ERROR: badaddr\n");
+        return;
     }
     
     var val = emu.mmu.readByte(addr);
 
     s.write("ok "+ val.toString(16) +'\n');
+});
+
+addCommand("writeb", function (s,command) {
+    var addr = command.split(" ")[1];
+    var val = command.split(" ")[2];
+    addr = parseInt(addr,16);
+    val = parseInt(val,16);
+    
+    var limit = emu.mmu.getPhysicalSize();
+    
+    if(addr < 0 || addr >= limit){
+        s.write("ERROR: badaddr\n");
+        return;
+    }
+    
+    if(val < 0 || val > 255){
+        s.write("ERROR: byteval\n");
+        return;
+    }
+    
+    emu.mmu.writeByte(addr,val);
+    s.write("ok\n");
 });
 
 
@@ -171,10 +225,10 @@ addCommand("shutdown", function(s,command){
 function handleCommand(data) {
 
     data = new String(data).split("\n")[0];
-    INFO("got command - " + data);
+    DEBUG("got command - " + data);
     for(var i = 0 ; i < commands.length ; i++){
         if(data.substr(0,commands[i].length) == commands[i]) {
-            INFO("executing command " + commands[i]);
+            DEBUG("executing command " + commands[i]);
             commandLUT[commands[i]](this,data);
             return;
         }
