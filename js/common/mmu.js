@@ -18,9 +18,10 @@ function Mmu(size) {
 
     this.addressTranslation = function(va, write) {
         function tlbLookup(addr, wr) {
-           var asid = this.cpu.EntryHiReg.ASID;
+           var asid = this.cpu.entryHiReg.ASID;
            var vpn = addr >>> 12;
            var tlb = this.tlb;
+		   
            for(i = 0; i < 64; i+= 4)
            {
                var tlbentry = tlb[i+1];
@@ -29,7 +30,7 @@ function Mmu(size) {
                {
                     var pagemask_raw = tlb[i];
                     var pagemask = Math.pow(2,pagemask_raw*2)-1;
-                    var pagemask_n = ~(pagemask) >>> 0;
+                    var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
                     var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
                     var vpncomp = (vpn & pagemask_n);
                     if(vpn2entry == vpncomp)
@@ -42,23 +43,37 @@ function Mmu(size) {
                          
                          if(!validBit)
                          {
+							this.cpu.entryHiReg.vpn2 = vpn;
                             // TODO: TLB invalid exception
                             break;
                          } 
 
                          if(write && !dirtyBit)
                          {
+							this.cpu.entryHiReg.vpn2 = vpn;
                             // TODO: TLB modified exception
                             break;
                          }
 
                          var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
-                         var pa = (dataEntry & pagemask_n) | (va & offset_mask); 
+						 var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
+                         var pa = (dataEntry & pa_mask) | (va & offset_mask); 
                          return pa;
                     }
                }
  
            }
+
+            this.cpu.entryHiReg.vpn2 = vpn;
+
+            if(this.cpu.statusRegister.EXL == 0)
+            {
+                // TODO: TLB Refill exception
+            }
+            else
+            {
+                // TODO: TLB Invalid exception
+            }
         }        
 
         if(this.cpu.isKernelMode())
