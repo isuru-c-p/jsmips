@@ -16,66 +16,66 @@ function Mmu(size) {
     // structure of tlb, each tlb entry = 4 array entries, 2 tag entry (1 for page mask) + 2 data entries
     this.tlb = new Uint32Array(4*16);
 
-    this.addressTranslation = function(va, write) {
-        function tlbLookup(addr, wr) {
-           var asid = this.cpu.entryHiReg.ASID;
-           var vpn = addr >>> 12;
-           var tlb = this.tlb;
-		   
-           for(i = 0; i < 64; i+= 4)
+    this.tlbLookup = function (addr, wr) {
+       var asid = this.cpu.entryHiReg.ASID;
+       var vpn = addr >>> 12;
+       var tlb = this.tlb;
+       
+       for(i = 0; i < 64; i+= 4)
+       {
+           var tlbentry = tlb[i+1];
+
+           if(((tlbentry & 0xff) == asid) | ((tlbentry >>> 8) == 0))
            {
-               var tlbentry = tlb[i+1];
+                var pagemask_raw = tlb[i];
+                var pagemask = Math.pow(2,pagemask_raw*2)-1;
+                var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
+                var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
+                var vpncomp = (vpn & pagemask_n);
+                if(vpn2entry == vpncomp)
+                {
+                     var evenoddbit = 12 + pagemask_raw*2;
+                     var evenoddbitVal = (va >>> evenoddbit) & 0x1;
+                     var dataEntry = tlb[i+2+evenoddbitVal];
+                     var validBit = dataEntry & 0x1;
+                     var dirtyBit = (dataEntry >>> 1) & 0x1;
+                     
+                     if(!validBit)
+                     {
+                        this.cpu.entryHiReg.vpn2 = vpn;
+                        // TODO: TLB invalid exception
+                        break;
+                     } 
 
-               if(((tlbentry & 0xff) == asid) | ((tlbentry >>> 8) == 0))
-               {
-                    var pagemask_raw = tlb[i];
-                    var pagemask = Math.pow(2,pagemask_raw*2)-1;
-                    var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
-                    var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
-                    var vpncomp = (vpn & pagemask_n);
-                    if(vpn2entry == vpncomp)
-                    {
-                         var evenoddbit = 12 + pagemask_raw*2;
-                         var evenoddbitVal = (va >>> evenoddbit) & 0x1;
-                         var dataEntry = tlb[i+2+evenoddbitVal];
-                         var validBit = dataEntry & 0x1;
-                         var dirtyBit = (dataEntry >>> 1) & 0x1;
-                         
-                         if(!validBit)
-                         {
-							this.cpu.entryHiReg.vpn2 = vpn;
-                            // TODO: TLB invalid exception
-                            break;
-                         } 
+                     if(write && !dirtyBit)
+                     {
+                        this.cpu.entryHiReg.vpn2 = vpn;
+                        // TODO: TLB modified exception
+                        break;
+                     }
 
-                         if(write && !dirtyBit)
-                         {
-							this.cpu.entryHiReg.vpn2 = vpn;
-                            // TODO: TLB modified exception
-                            break;
-                         }
-
-                         var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
-						 var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
-                         var pa = (dataEntry & pa_mask) | (va & offset_mask); 
-                         return pa;
-                    }
-               }
- 
+                     var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
+                     var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
+                     var pa = (dataEntry & pa_mask) | (va & offset_mask); 
+                     return pa;
+                }
            }
 
-            this.cpu.entryHiReg.vpn2 = vpn;
+       }
 
-            if(this.cpu.statusRegister.EXL == 0)
-            {
-                // TODO: TLB Refill exception
-            }
-            else
-            {
-                // TODO: TLB Invalid exception
-            }
-        }        
+        this.cpu.entryHiReg.vpn2 = vpn;
 
+        if(this.cpu.statusRegister.EXL == 0)
+        {
+            // TODO: TLB Refill exception
+        }
+        else
+        {
+            // TODO: TLB Invalid exception
+        }
+    }            
+    
+    this.addressTranslation = function(va, write) {
         if(this.cpu.isKernelMode())
         {
             var top3 = va >>> 29;
@@ -100,14 +100,14 @@ function Mmu(size) {
             // kuseg (ERL=0), kseg2 and kseg3
             else
             {
-                return tlbLookup(va,write);
+                return this.tlbLookup(va,write);
             }
         }
         else
         {
             if((va >>> 31) == 0)
             {
-                return tlbLookup(va,write);
+                return this.tlbLookup(va,write);
             }
             else
             {
