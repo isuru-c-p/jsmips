@@ -73,7 +73,7 @@ function Mmu(size) {
 
     this.tlbLookup = function (addr, wr) {
        var asid = this.cpu.entryHiReg.ASID;
-       var vpn = addr >>> 12;
+       var vpn2 = addr >>> 13;
        var tlb = this.tlb;
        
        for(i = 0; i < 64; i+= 4)
@@ -86,11 +86,11 @@ function Mmu(size) {
                 var pagemask = Math.pow(2,pagemask_raw*2)-1;
                 var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
                 var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
-                var vpncomp = (vpn & pagemask_n);
-                if(vpn2entry == vpncomp)
+                var vpn2comp = (vpn2 & pagemask_n);
+                if(vpn2entry == vpn2comp)
                 {
                      var evenoddbit = 12 + pagemask_raw*2;
-                     var evenoddbitVal = (va >>> evenoddbit) & 0x1;
+                     var evenoddbitVal = (addr >>> evenoddbit) & 0x1;
                      var dataEntry = tlb[i+2+evenoddbitVal];
                      var validBit = dataEntry & 0x1;
                      var dirtyBit = (dataEntry >>> 1) & 0x1;
@@ -111,7 +111,7 @@ function Mmu(size) {
 
                      var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
                      var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
-                     var pa = (dataEntry & pa_mask) | (va & offset_mask); 
+                     var pa = (dataEntry & pa_mask) | (addr & offset_mask); 
                      return pa;
                 }
            }
