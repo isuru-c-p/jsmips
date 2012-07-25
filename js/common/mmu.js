@@ -122,45 +122,47 @@ function Mmu(size) {
 
 	this.readHalfWord = function(address)
 	{
-		return this.physicalMemory.getUInt16LE(address);
+		return this.physicalMemory.getUInt16LE(this.addressTranslation(address,0));
 	}
 	
     this.writeHalfWord = function(address, val)
     {
-        this.physicalMemory.putUInt16LE(address, val);
+        this.physicalMemory.putUInt16LE(this.addressTranslation(address,1), val);
     }	
 
     this.readByte = function(address)
     {
-        return this.physicalMemory.getByte(address);
+        return this.physicalMemory.getByte(this.addressTranslation(address,0));
     }
 
     this.writeByte = function(address, val)
     {
-        this.physicalMemory.putByte(address, val);
+        this.physicalMemory.putByte(this.addressTranslation(address,1), val);
     }
 	
 	this.readWord = function(address)
 	{
+        var addr = this.addressTranslation(address,0);
 		if(this.cpu.getEndianness() == 0)
 		{
-			return this.physicalMemory.getUInt32LE(address);
+			return this.physicalMemory.getUInt32LE(addr);
 		}
 		else
 		{
-			return this.physicalMemory.getUInt32BE(address);
+			return this.physicalMemory.getUInt32BE(addr);
 		}
 	}
 	
 	this.writeWord = function(address, value)
 	{
+        var addr = this.addressTranslation(address,1);
 		if(this.cpu.getEndianness() == 0)
 		{
-			return this.physicalMemory.putUInt32LE(address, value >>> 0);
+			return this.physicalMemory.putUInt32LE(addr, value >>> 0);
 		}
 		else
 		{
-			return this.physicalMemory.putUInt32BE(address, value >>> 0);
+			return this.physicalMemory.putUInt32BE(addr, value >>> 0);
 		}	
 	}
 }
