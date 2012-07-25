@@ -36,6 +36,127 @@ function twosComplement(value)
 }
 
 
+// CP0 Register 0, Select 0
+function IndexRegister() {
+    this.P = 0;
+    this.Index = 0;
+    
+    this.asUInt32 = function() {
+        return ((this.P << 31) + this.Index); 
+    }
+    
+    this.putUInt32 = function(val) {
+        this.P = val >>> 31;
+        this.Index = val & 0xf;
+    }
+}
+
+// CP0 Register 1, Select 0
+function RandomRegister() {
+    this.Random = 15;
+    this._lowerBound = 0;
+    this._upperBound = 15;
+    
+    this.asUInt32 = function()
+    {
+        return this.Random;
+    }
+}
+
+// CP0 Register 2 and 3, Select 0
+function EntryLoRegister() {
+    this.PFN = 0;
+    this.C = 0;
+    this.D = 0;
+    this.V = 0;
+    this.G = 0;
+    
+    this.asUInt32 = function()
+    {
+        return (this.G + (this.V << 1) + (this.D << 2) + (this.C << 3) + (this.PFN << 6));
+    }
+    
+    this.putUInt32 = function(val)
+    {
+        this.G = val & 0x1;
+        this.V = (val >>> 1) & 0x1;
+        this.D = (val >>> 2) & 0x1;
+        this.C = (val >>> 3) & 0x7;
+        this.PFN = (val >>> 6) & 0xfffff;
+    }
+}
+
+// CP0 Register 4, Select 0
+function ContextRegister() {
+    this.PTEBase = 0;
+    this.BadVPN2 = 0;
+    
+    this.asUInt32 = function()
+    {
+        return ((this.PTEBase * Math.pow(2,23)) + (this.BadVPN2 << 4));
+    }
+    
+    this.putUInt32 = function(val)
+    {
+        this.BadVPN2 = (val >>> 4) & 0x7ffff;
+        this.PTEBase = (val >>> 23) & 0xff;
+    }
+}
+
+// CP0 Register 5, Select 0
+function PageMaskRegister() {
+    this.Mask = 0;
+    
+    this.asUInt32 = function()
+    {
+        return (this.Mask << 13);
+    }
+    
+    this.putUInt32 = function(val)
+    {
+        this.Mask = (val >> 13) & 0xfff;
+    }
+}
+
+// CP0 Register 6, Select 0
+function WiredRegister() {
+    this.Wired = 0;
+    
+    this.asUInt32 = function()
+    {
+        return this.Wired;
+    }
+    
+    this.putUInt32 = function(val)
+    {
+        this.Wired = val & 0xf;
+    }
+}
+
+// CP0 Register 8, Select 0
+// BadVAddr = GeneralRegister
+
+// CP0 Register 9, Select 0
+// Count = GeneralRegister
+
+// CP0 Register 10, Select 0
+function EntryHiRegister() {
+    this.VPN2 = 0;
+    this.ASID = 0;
+    
+    this.asUInt32 = function() {
+        return ((this.VPN2 << 13) + this.ASID);
+    }
+    
+    this.putUInt32 = function(val) {
+        this.ASID = val & 0xff;
+        this.VPN2 = (val >>> 13) & 0xfff;
+    }
+}
+
+// CP0 Register 11, Select 0
+// Compare = GeneralRegister
+
 // CP0 Register 12, Select 0
 function StatusRegister() {
 	this.CU = 1; // Controls access to co-processors, bits 31:28
@@ -62,7 +183,7 @@ function StatusRegister() {
 		return ((this.CU * Math.pow(2, 28)) + (this.RP * Math.pow(2,27)) + (this.R * Math.pow(2,26)) + (this.RE * Math.pow(2, 25)) + (this.BEV * Math.pow(2,22)) + (this.TS * Math.pow(2, 21)) + (this.SR * Math.pow(2,20)) + (this.NMI * Math.pow(2, 19)) + (this.IM * Math.pow(2, 8)) + (this.UM * Math.pow(2,4)) + (this.ERL * Math.pow(2,2)) + (this.EXL * Math.pow(2,1)) + this.IE);   
 	}
 	
-	this.setValue = function(value)
+	this.putUInt32 = function(value)
 	{
 		this.CU = (value >>> 28) & 0xf;
 		this.RP = (value >>> 27) & 0x1;
@@ -80,6 +201,55 @@ function StatusRegister() {
 		this.IE = value & 0x1;
 	}
 
+}
+
+// CP0 Register 13, Select 0
+function CauseRegister()
+{
+    this.BD = 0;
+    this.CE = 0;
+    this.IV = 0;
+    this.WP = 0;
+    this.IP1 = 0;
+    this.IP0 = 0;
+    this.EXC = 0;
+    
+    this.asUInt32 = function() {
+        return ((this.EXC << 2) + (this.IP0 << 8) + (this.IP1 << 10) + (this.WP << 22) + (this.IV << 23) + (this.CE << 28) + (this.BD * Math.pow(2,31))); 
+    }
+    
+    this.putUInt32 = function(val) {
+        this.BD = (val >>> 31);
+        this.CE = (val >>> 28) & 0x3;
+        this.IV = (val >>> 23) & 0x1;
+        this.WP = (val >>> 22) & 0x1;
+        this.IP1 = (val >>> 10) & 0x3f;
+        this.IP0 = (val >>> 8) & 0x3;
+        this.EXC = (val >>> 2) & 0x1f;
+    }
+}
+
+// CP0 Register 14, Select 0
+// ExceptionProgramCounter = GeneralRegister
+
+// CP0 Register 15, Select 0
+function processorIDRegister()
+{
+	// all fields are read only by software
+	this.R = 0; // bits 31:24
+	this.companyID = 1; // bits 23:16
+	this.processorID = 128; // bits 15:8, (128 for 4kc)
+	this.revision = 11; // bits 7:0, latest version according to manual
+	
+	this.asUInt32 = function()
+	{
+		return ((this.R << 24) + (this.companyID << 16) + (this.processorID << 8) + this.revision);
+	}
+	
+	this.putUInt32 = function(value)
+	{
+		return;
+	}
 }
 
 // CP0 Register 16, Select 0
@@ -109,7 +279,7 @@ function ConfigRegister()
 		return ((this.M * Math.pow(2,31)) + (this.K23 * Math.pow(2,28)) + (this.KU * Math.pow(2,25)) + (this.ISP * Math.pow(2,24)) + (this.DSP * Math.pow(2,23)) + (this.SB * Math.pow(2,21)) + (this.MDU * Math.pow(2,20)) + (this.MM * Math.pow(2,17)) + (this.BM * Math.pow(2,16)) + (this.BE * Math.pow(2,15)) + (this.AT * Math.pow(2,13)) + (this.AR * Math.pow(2,10)) + (this.MT * Math.pow(2,7)) + this.K0);
 	}
 	
-	this.setValue = function(value)
+	this.putUInt32 = function(value)
 	{
 		this.K0 = value & 0x7;
 	}
@@ -140,27 +310,7 @@ function Config1Register()
 		return ((this.M * Math.pow(2,31)) + (this.MMUSize * Math.pow(2,25)) + (this.IS * Math.pow(2,22)) + (this.IL * Math.pow(2,19)) + (this.IA * Math.pow(2,16)) + (this.DS * Math.pow(2,13)) + (this.DL * Math.pow(2,10)) + (this.DA * Math.pow(2,7)) + (this.PC * Math.pow(2,4)) + (this.WR * Math.pow(2,3)) + (this.CA * Math.pow(2,2)) + (this.EP * Math.pow(2,1)) + this.FP);
 	}
 	
-	this.setValue = function(value)
-	{
-		return;
-	}
-}
-
-// CP0 Register 15, Select 0
-function processorIDRegister()
-{
-	// all fields are read only by software
-	this.R = 0; // bits 31:24
-	this.companyID = 1; // bits 23:16
-	this.processorID = 128; // bits 15:8, (128 for 4kc)
-	this.revision = 11; // bits 7:0, latest version according to manual
-	
-	this.asUInt32 = function()
-	{
-		return ((this.R << 24) + (this.companyID << 16) + (this.processorID << 8) + this.revision);
-	}
-	
-	this.setValue = function(value)
+	this.putUInt32 = function(value)
 	{
 		return;
 	}
@@ -177,7 +327,7 @@ function LLAddrRegister()
 		return this.PAddr;
 	}
 	
-	this.setValue = function(value)
+	this.putUInt32 = function(value)
 	{
 		return;
 	}
@@ -241,7 +391,15 @@ function MipsCpu () {
     }
 
     this.C0Registers = new Array(32);
-    for(var i = 1; i < 32; i++) {
+    this.C0Registers[0] = new IndexRegister();
+    this.C0Registers[1] = new RandomRegister();
+    this.C0Registers[2] = new EntryLoRegister();
+    this.C0Registers[3] = new ContextRegister();
+    this.C0Registers[4] = new PageMaskRegister();
+    this.C0Registers[5] = new WiredRegister();
+    //this.C0Registers[6] = new 
+    
+    for(var i = 6; i < 32; i++) {
         this.C0Registers[i] = new GeneralRegister();
     }
     
@@ -284,7 +442,7 @@ function MipsCpu () {
 	this.getEndianness = function()
 	{
 		// returns 0 for LE and 1 for BE
-		bigEndian = this.configRegister.BE;
+		var bigEndian = this.configRegister.BE;
 		
 		// if in user mode, and RE is set, reverse endianness
 		if((this.statusRegister.UM == 1) && (this.statusRegister.RE == 1))
