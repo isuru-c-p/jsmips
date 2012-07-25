@@ -50,10 +50,26 @@ a a a a a a a a
 
 ----
 
-Cop0
+COP0
 23,21
 25,24
 MFCO a a a MTCO a a  a
-a a a a a a a CO
+a a a a a a a a
 CO CO CO CO CO CO CO CO
 CO CO CO CO CO CO CO CO
+
+----
+
+CO
+2,0
+5,3
+a TLBR TLBWI a a a TLBWR a
+TLBP a a a a a a a
+a a a a a a a a
+ERET a a a a a a DERET
+WAIT a a a a a a a
+a a a a a a a a
+a a a a a a a a
+a a a a a a a a
+
+
