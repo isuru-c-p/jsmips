@@ -53,7 +53,7 @@ a a a a a a a a
 COP0
 23,21
 25,24
-MFCO a a a MTCO a a a
+MFC0 a a a MTC0 a a a
 a a a a a a a a
 CO CO CO CO CO CO CO CO
 CO CO CO CO CO CO CO CO
