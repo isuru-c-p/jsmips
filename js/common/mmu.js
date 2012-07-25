@@ -31,7 +31,7 @@ function Mmu(size) {
         var vpn2 = (entryhi >>> 13);
         var asid = (entryhi & 0xff) >>> 0;
 
-        tlb[index] = (pagemask >>> 13) & 0xfff;
+        tlb[index] = pagemask;//(pagemask >>> 13) & 0xfff;
         tlb[index+1] = ((vpn2 << 9) | (g << 8) | asid) >>> 0;
         tlb[index+2] = (pfn0 << 5) | entrylo0low;
         tlb[index+3] = (pfn1 << 5) | entrylo1low;
@@ -40,8 +40,11 @@ function Mmu(size) {
     this.readTLBEntry = function(index)
     {
         var ret = new Array[4];
-        var tlb = this.tlb;
-        var pagemask = (tlb[index] << 13) >>> 0; 
+        var tlb = this.tlb; 
+
+        var pagemask_raw = tlb[index]; 
+        var pagemask = Math.pow(2,pagemask_raw*2)-1;
+
         var tlbTag1 = tlb[index+1];
 
         var vpn2 = tlbTag1 >>> 9;

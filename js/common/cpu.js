@@ -110,9 +110,15 @@ function ContextRegister() {
 function PageMaskRegister() {
     this.Mask = 0;
     
+    this.rawUInt32 = function()
+    {
+        return this.Mask;
+    }
+
     this.asUInt32 = function()
     {
-        return (this.Mask << 13);
+        var mask = Math.pow(2,this.Mask*2)-1;
+        return (mask << 13);
     }
     
     this.putUInt32 = function(val)
@@ -1959,7 +1965,7 @@ function MipsCpu () {
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
-        var pagemask = c0registers[5].asUInt32();
+        var pagemask = c0registers[5].rawUInt32();
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
         this.advancePC();
     }
