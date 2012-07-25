@@ -15,6 +15,61 @@ function Mmu(size) {
     this.physicalMemory = new OctetBuffer(size);
     // structure of tlb, each tlb entry = 4 array entries, 2 tag entry (1 for page mask) + 2 data entries
     this.tlb = new Uint32Array(4*16);
+    for(i = 0; i < 48; i++)
+    {
+        this.tlb[i] = 0;
+    }
+
+    this.writeTLBEntry = function(index, entrylo0, entrylo1, entryhi, pagemask)
+    {
+        var tlb = this.tlb;
+        var g = ((entrylo0 & entrylo1) >>> 0) & 0x1;
+        var pfn0 = (entrylo0 >>> 6) & 0xfffff;
+        var entrylo0low = ((entrylo0) & 0x3f) >>> 0;
+        var pfn1 = (entrylo1 >>> 6) & 0xfffff;
+        var entrylo1low = ((entrylo1) & 0x3f) >>> 0;
+        var vpn2 = (entryhi >>> 13);
+        var asid = (entryhi & 0xff) >>> 0;
+
+        tlb[index] = (pagemask >>> 13) & 0xfff;
+        tlb[index+1] = ((vpn2 << 9) | (g << 8) | asid) >>> 0;
+        tlb[index+2] = (pfn0 << 5) | entrylo0low;
+        tlb[index+3] = (pfn1 << 5) | entrylo1low;
+    }
+
+    this.readTLBEntry = function(index)
+    {
+        var ret = new Array[4];
+        var tlb = this.tlb;
+        var pagemask = (tlb[index] << 13) >>> 0; 
+        var tlbTag1 = tlb[index+1];
+
+        var vpn2 = tlbTag1 >>> 9;
+        var g = (tlbTag1 >>> 8) & 0x1;
+        var asid = (tlbTag1 & 0xff);
+
+        var tlbEntry0 = tlb[index+2];
+
+        var pfn0 = (tlbEntry0 >>> 5) & 0xfffff;
+        var entrylo0low = tlbEntry0 & 0x3f;
+
+        var tlbEntry1 = tlb[index+3];
+        
+        var pfn1 = (tlbEntry1 >>> 5) & 0xfffff;
+        var entrylo1low = tlbEntry1 & 0x3f;
+
+        var entrylo0 = entrylo0low | (pfn0 << 6); 
+        var entrylo1 = entrylo1low | (pfn1 << 6);
+
+        var entryhi = (asid | (vpn2 << 13)) >>> 0; 
+
+        ret[0] = entrylo0low;
+        ret[1] = entrylo1low;
+        ret[2] = entryhi;
+        ret[3] = pagemask;
+        return ret;
+    }
+
 
     this.tlbLookup = function (addr, wr) {
        var asid = this.cpu.entryHiReg.ASID;

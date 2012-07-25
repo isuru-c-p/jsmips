@@ -53,13 +53,16 @@ function IndexRegister() {
 
 // CP0 Register 1, Select 0
 function RandomRegister() {
-    this.Random = 15;
-    this._lowerBound = 0;
     this._upperBound = 15;
     
     this.asUInt32 = function()
     {
-        return this.Random;
+        var wire = this.Wire.asUInt32();
+        var randRange = (15 - wire);
+        
+        var random = wire + Math.floor(Math.random() * randRange);    
+    
+        return random;
     }
 }
 
@@ -114,7 +117,37 @@ function PageMaskRegister() {
     
     this.putUInt32 = function(val)
     {
-        this.Mask = (val >> 13) & 0xfff;
+        var mask = 0;
+
+        switch(val)
+        {
+            case 0:
+                mask = 0;
+                break;
+            case 3:
+                mask = 1;
+                break;
+            case 15:
+                mask = 2;
+                break;
+            case 63:
+                mask = 3;
+                break; 
+            case 255:
+                mask = 4;
+                break;
+            case 1023:
+                mask = 5;
+                break;
+            case 4095:
+                mask = 6; 
+                break;
+            default:
+                ERROR("Invalid page mask.");
+                break; 
+        }
+
+        this.Mask = mask;
     }
 }
 
@@ -1906,4 +1939,39 @@ function MipsCpu () {
 
 		this.advancePC();
     }	
+
+    this.TLBR = function ( op ) {
+        DEBUG("TLBR");
+
+        var index = c0registers[0].asUInt32();
+        var tlbParsed = this.mmu.readTLBEntry(index);
+        entryLo0.putUInt32(tlbParsed[0]);
+        entryLo1.putUInt32(tlbParsed[1]);
+        entryHi.putUInt32(tlbParsed[2]);
+        pagemask.putUInt32(tlbParsed[3]);
+        this.advancePC();
+    }
+
+    this.TLBWI = function ( op ) {
+        DEBUG("TLBWI");
+        c0registers = this.C0Registers;
+        var index = c0registers[0].asUInt32();
+        var entryHi = c0registers[10].asUInt32();
+        var entryLo0 = c0registers[2].asUInt32();
+        var entryLo1 = c0registers[3].asUInt32();
+        var pagemask = c0registers[5].asUInt32();
+        this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
+        this.advancePC();
+    }
+
+    this.TLBWR = function ( op ) {
+        DEBUG("TLBWR");
+        var index = c0registers[0].asUInt32();
+        var entryHi = c0registers[10].asUInt32();
+        var entryLo0 = c0registers[2].asUInt32();
+        var entryLo1 = c0registers[3].asUInt32();
+        var pagemask = c0registers[5].asUInt32();
+        this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
+        this.advancePC();
+    }
 }
