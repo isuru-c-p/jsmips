@@ -55,13 +55,6 @@ addCommand("setll", function (s,command) {
 
 
 
-addCommand("reset", function (s,command) {
-
-    reset()
-    s.write("ok\n");
-
-});
-
 
 addCommand("step", function (s,command) {
 
@@ -82,6 +75,12 @@ function breakExecution() {
     isRunning = false;
 
 }
+
+addCommand("reset", function (s,command) {
+    breakExecution();
+    reset()
+    s.write("ok\n");
+});
 
 
 addCommand("isrunning", function (s,command) {
@@ -195,9 +194,8 @@ addCommand("writeb", function (s,command) {
     addr = parseInt(addr,16);
     val = parseInt(val,16);
     
-    var limit = emu.mmu.getPhysicalSize();
     
-    if(addr < 0 || addr >= limit){
+    if( addr > 0xBFFFFFFF  || addr < 0x80000000 ){
         s.write("ERROR: badaddr\n");
         return;
     }
