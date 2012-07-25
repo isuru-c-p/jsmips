@@ -425,7 +425,7 @@ function MipsCpu () {
        return (this.statusRegister.UM == 0) | (this.statusRegister.ERL == 1) | (this.statusRegister.EXL == 1);  
     }
 
-    this.getC0Register(index, select)
+    this.getC0Register = function(index, select)
     {
        if(index != 16)  
        {
