@@ -3,6 +3,15 @@
 
 #define N 600851475143
 
+
+long
+__moddi3 (long u, long v)
+{
+    return 0;
+}
+
+
+
 int isPrime(int n){
 
     if(n == 1)
