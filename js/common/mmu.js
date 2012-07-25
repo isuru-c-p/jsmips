@@ -112,9 +112,10 @@ function Mmu(size) {
                         break;
                      }
 
-                     var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
-                     var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
-                     var pa = (dataEntry & pa_mask) | (addr & offset_mask); 
+                     var offset_mask = 4095 | (pagemask * 4095); // (2^13-1) | (pagemask << 13)  
+                     var pa_mask = 1 + (pagemask_n << 1) + 1040384; // (0b1111111 << 13) | pagemask_n << 1 | 1 
+                     var pfn = (dataEntry >>> 5) & pa_mask;
+                     var pa = (pfn << 12) | (addr & offset_mask); 
                      return pa;
                 }
            }
