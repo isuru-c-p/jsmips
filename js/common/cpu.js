@@ -394,15 +394,20 @@ function MipsCpu () {
     this.C0Registers[0] = new IndexRegister();
     this.C0Registers[1] = new RandomRegister();
     this.C0Registers[2] = new EntryLoRegister();
-    this.C0Registers[3] = new ContextRegister();
-    this.C0Registers[4] = new PageMaskRegister();
-    this.C0Registers[5] = new WiredRegister();
-    //this.C0Registers[6] = new 
-    
-    for(var i = 6; i < 32; i++) {
-        this.C0Registers[i] = new GeneralRegister();
-    }
-    
+    this.C0Registers[3] = new EntryLoRegister();
+    this.C0Registers[4] = new ContextRegister();
+    this.C0Registers[5] = new PageMaskRegister();
+    this.C0Registers[6] = new WiredRegister();
+    this.C0Registers[8] = new GeneralRegister(); // BadVAddr
+    this.C0Registers[9] = new GeneralRegister(); // Count
+    this.C0Registers[10] = new EntryHiRegister(); 
+    this.C0Registers[11] = new GeneralRegister(); //Compare
+    this.C0Registers[12] = new StatusRegister();
+    this.C0Registers[13] = new CauseRegister();
+    this.C0Registers[14] = new GeneralRegister(); // EPC
+    this.C0Registers[15] = new processorIDRegister();
+    this.C0Registers[17] = new LLAddrRegister();
+ 
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
     
@@ -418,6 +423,22 @@ function MipsCpu () {
 
     this.isKernelMode = function () {
        return (this.statusRegister.UM == 0) | (this.statusRegister.ERL == 1) | (this.statusRegister.EXL == 1);  
+    }
+
+    this.getC0Register(index, select)
+    {
+       if(index != 16)  
+       {
+            return this.C0Registers[index];
+       }
+       else if(select == 0)
+       {
+            return this.configRegister;
+       }
+       else
+       {
+            return this.config1Register;
+       }
     }
 	
 	this.advancePC = function () {
@@ -1008,7 +1029,7 @@ function MipsCpu () {
         var rt = getRt(op);
         var cd = getRd(op);
 
-        this.genRegisters[rt].putUInt32(this.C0Registers[cd].asUInt32());
+        this.genRegisters[rt].putUInt32(this.getC0Register(cd).asUInt32());
         this.advancePC();
     }
 	
@@ -1018,7 +1039,7 @@ function MipsCpu () {
         var cd = getRd(op);
 		var rt_val = this.genRegisters[rt].asUInt32();
 		
-		this.C0Registers[cd].putUInt32(rt_val);
+		this.getC0Register(cd).putUInt32(rt_val);
         this.advancePC();
     }	
 	
