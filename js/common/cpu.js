@@ -446,19 +446,132 @@ function MipsCpu () {
     this.C0Registers[14] = new GeneralRegister(); // EPC
     this.C0Registers[15] = new processorIDRegister();
     this.C0Registers[17] = new LLAddrRegister();
+
+    this.exceptionFlags = new Uint32Array(29);
  
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
     
-	this.statusRegister = new StatusRegister();
+	this.statusRegister = this.C0Registers[12];
 	this.configRegister = new ConfigRegister();
 	this.config1Register = new Config1Register();
-	this.processorIDRegister = new processorIDRegister();
-	this.llAddrRegister = new LLAddrRegister();
+	this.llAddrRegister = this.C0Registers[17];
 	this.PC = new GeneralRegister();
 	this.doOp = doOp;
 	
 	this.delaySlot = false;
+    this.exceptionOccured = false;
+
+    this.excCode = 0; 
+
+    this.getExceptionVectorAddress = function(exception)
+    {
+        var statusRegister = this.C0Registers[12];
+        var BEV = statusRegister.BEV;
+        var EXL = statusRegister.EXL;
+        var IV = this.C0Registers[13].IV;
+        var genBase = 0x80000000;
+        if(BEV == 1)
+        {
+            genBase = 0xBFC00200;
+        }
+
+        switch(exception)
+        {
+            case 0:
+            case 1:
+            case 4:
+                return 0xBFC00000;
+
+            /*case 2:
+            case 3:
+            case 8:
+            case 13:
+            case 20:
+            case 28:
+                if(EJTAG ProbTrap==0)
+                {
+                    return 0xBFC00480;
+                }
+                else
+                {
+                    return 0xFF200200;
+                }*/
+
+            case 6:
+                if(IV == 0)
+                {
+                    return genBase + 0x180;
+                }
+                return genBase + 0x200;
+
+            case 11: 
+            case 25:
+            case 26:
+            case 27:
+                if(EXL == 1)
+                {
+                    return genBase + 0x180;
+                }
+                return genBase;
+
+            default:
+                return genBase + 0x180;
+        } 
+    }
+
+    this.processException = function()
+    {
+        var PC = this.PC;
+        var causeReg = this.C0Registers[13];
+        var statusRegister = this.statusRegister;
+        if(statusRegister.EXL == 0)
+        {
+           var EPCval = 0;
+           var epcReg = this.C0Registers[14];
+
+           if(this.delaySlot)
+           {
+               EPCval = (PC.asUInt32() - 4);
+               causeReg.BD = 1;
+           } 
+           else
+           {
+               EPCval = (PC.asUInt32());
+               causeReg.BD = 0;
+           }
+
+           epcReg.putUInt32(EPCval);
+        }
+
+        var exceptionFlags = this.exceptionFlags;
+        var exceptionNum = -1;
+
+        for(i = 0; i < 29; i++)
+        {
+            if(exceptionFlags[i] == 1)
+            {
+                exceptionNum = i;
+                break;
+            }
+        }
+
+        if(exceptionNum == -1)
+        {
+            ERROR("Attempting to process exception but exceptionFlags not set!");
+            return;
+        }
+
+        causeReg.EXC = this.excCode;
+        causeReg.CE = 0; // TODO: set CE to a proper value on CoProcessor unusable exception
+       
+        var excAddress = this.getExceptionVectorAddress(exceptionNum);
+
+        statusRegister.EXL = 1; 
+        PC.putUInt32(excAddress);
+
+        this.exceptionOccured = false;
+    }
 
     this.isKernelMode = function () {
        return (this.statusRegister.UM == 0) | (this.statusRegister.ERL == 1) | (this.statusRegister.EXL == 1);  
@@ -494,6 +607,12 @@ function MipsCpu () {
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
 	    this.doOp(ins);
+
+        if(this.exceptionOccured)
+        {
+            this.processException();
+        }
+
 	    this.delaySlot = false;
 	
 	};
