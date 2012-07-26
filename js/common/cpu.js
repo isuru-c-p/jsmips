@@ -53,13 +53,16 @@ function IndexRegister() {
 
 // CP0 Register 1, Select 0
 function RandomRegister() {
-    this.Random = 15;
-    this._lowerBound = 0;
     this._upperBound = 15;
     
     this.asUInt32 = function()
     {
-        return this.Random;
+        var wire = this.Wire.asUInt32();
+        var randRange = (15 - wire);
+        
+        var random = wire + Math.floor(Math.random() * randRange);    
+    
+        return random;
     }
 }
 
@@ -107,14 +110,50 @@ function ContextRegister() {
 function PageMaskRegister() {
     this.Mask = 0;
     
+    this.rawUInt32 = function()
+    {
+        return this.Mask;
+    }
+
     this.asUInt32 = function()
     {
-        return (this.Mask << 13);
+        var mask = Math.pow(2,this.Mask*2)-1;
+        return (mask << 13);
     }
     
     this.putUInt32 = function(val)
     {
-        this.Mask = (val >> 13) & 0xfff;
+        var mask = 0;
+
+        switch(val)
+        {
+            case 0:
+                mask = 0;
+                break;
+            case 3:
+                mask = 1;
+                break;
+            case 15:
+                mask = 2;
+                break;
+            case 63:
+                mask = 3;
+                break; 
+            case 255:
+                mask = 4;
+                break;
+            case 1023:
+                mask = 5;
+                break;
+            case 4095:
+                mask = 6; 
+                break;
+            default:
+                ERROR("Invalid page mask.");
+                break; 
+        }
+
+        this.Mask = mask;
     }
 }
 
@@ -407,19 +446,142 @@ function MipsCpu () {
     this.C0Registers[14] = new GeneralRegister(); // EPC
     this.C0Registers[15] = new processorIDRegister();
     this.C0Registers[17] = new LLAddrRegister();
+
+    this.exceptionFlags = new Uint32Array(30);
+    this.excCodes = new Uint32Array(30);
  
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
     
-	this.statusRegister = new StatusRegister();
+	this.statusRegister = this.C0Registers[12];
 	this.configRegister = new ConfigRegister();
 	this.config1Register = new Config1Register();
-	this.processorIDRegister = new processorIDRegister();
-	this.llAddrRegister = new LLAddrRegister();
+	this.llAddrRegister = this.C0Registers[17];
 	this.PC = new GeneralRegister();
 	this.doOp = doOp;
 	
 	this.delaySlot = false;
+    this.exceptionOccured = false;
+
+    this.triggerException = function(exception, exc_code)
+    {
+        this.exceptionOccured = true;
+        this.excCodes[exception] = exc_code;
+        this.exceptionFlags[exception] = 1;
+    }
+
+    this.getExceptionVectorAddress = function(exception)
+    {
+        var statusRegister = this.C0Registers[12];
+        var BEV = statusRegister.BEV;
+        var EXL = statusRegister.EXL;
+        var IV = this.C0Registers[13].IV;
+        var genBase = 0x80000000;
+        if(BEV == 1)
+        {
+            genBase = 0xBFC00200;
+        }
+
+        switch(exception)
+        {
+            case 0:
+            case 1:
+            case 4:
+                return 0xBFC00000;
+
+            /*case 2:
+            case 3:
+            case 8:
+            case 14:
+            case 21:
+            case 29:
+                if(EJTAG ProbTrap==0)
+                {
+                    return 0xBFC00480;
+                }
+                else
+                {
+                    return 0xFF200200;
+                }*/
+
+            case 6:
+                if(IV == 0)
+                {
+                    return genBase + 0x180;
+                }
+                return genBase + 0x200;
+
+            case 11: 
+            case 26:
+            case 27:
+            case 28:
+                if(EXL == 1)
+                {
+                    return genBase + 0x180;
+                }
+                return genBase;
+
+            default:
+                return genBase + 0x180;
+        } 
+    }
+
+    this.processException = function()
+    {
+        var PC = this.PC;
+        var causeReg = this.C0Registers[13];
+        var statusRegister = this.statusRegister;
+        if(statusRegister.EXL == 0)
+        {
+           var EPCval = 0;
+           var epcReg = this.C0Registers[14];
+
+           if(this.delaySlot)
+           {
+               EPCval = (PC.asUInt32() - 4);
+               causeReg.BD = 1;
+           } 
+           else
+           {
+               EPCval = (PC.asUInt32());
+               causeReg.BD = 0;
+           }
+
+           epcReg.putUInt32(EPCval);
+        }
+
+        var exceptionFlags = this.exceptionFlags;
+        var exceptionNum = -1;
+
+        for(i = 0; i < 30; i++)
+        {
+            if(exceptionFlags[i] == 1)
+            {
+                exceptionNum = i;
+                break;
+            }
+        }
+
+        if(exceptionNum == -1)
+        {
+            ERROR("Attempting to process exception but exceptionFlags not set!");
+            return;
+        }
+
+        causeReg.EXC = this.excCodes[exceptionNum];
+        causeReg.CE = 0; // TODO: set CE to a proper value on CoProcessor unusable exception
+       
+        var excAddress = this.getExceptionVectorAddress(exceptionNum);
+
+        statusRegister.EXL = 1; 
+        PC.putUInt32(excAddress);
+
+        this.exceptionOccured = false;
+        for(i = 0; i < 30; i++)
+        {
+            this.exceptionFlags[i] = 0;
+        }
+    }
 
     this.isKernelMode = function () {
        return (this.statusRegister.UM == 0) | (this.statusRegister.ERL == 1) | (this.statusRegister.EXL == 1);  
@@ -455,6 +617,12 @@ function MipsCpu () {
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
 	    this.doOp(ins);
+
+        if(this.exceptionOccured)
+        {
+            this.processException();
+        }
+
 	    this.delaySlot = false;
 	
 	};
@@ -1906,4 +2074,39 @@ function MipsCpu () {
 
 		this.advancePC();
     }	
+
+    this.TLBR = function ( op ) {
+        DEBUG("TLBR");
+
+        var index = c0registers[0].asUInt32();
+        var tlbParsed = this.mmu.readTLBEntry(index);
+        entryLo0.putUInt32(tlbParsed[0]);
+        entryLo1.putUInt32(tlbParsed[1]);
+        entryHi.putUInt32(tlbParsed[2]);
+        pagemask.putUInt32(tlbParsed[3]);
+        this.advancePC();
+    }
+
+    this.TLBWI = function ( op ) {
+        DEBUG("TLBWI");
+        c0registers = this.C0Registers;
+        var index = c0registers[0].asUInt32();
+        var entryHi = c0registers[10].asUInt32();
+        var entryLo0 = c0registers[2].asUInt32();
+        var entryLo1 = c0registers[3].asUInt32();
+        var pagemask = c0registers[5].rawUInt32();
+        this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
+        this.advancePC();
+    }
+
+    this.TLBWR = function ( op ) {
+        DEBUG("TLBWR");
+        var index = c0registers[0].asUInt32();
+        var entryHi = c0registers[10].asUInt32();
+        var entryLo0 = c0registers[2].asUInt32();
+        var entryLo1 = c0registers[3].asUInt32();
+        var pagemask = c0registers[5].asUInt32();
+        this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
+        this.advancePC();
+    }
 }

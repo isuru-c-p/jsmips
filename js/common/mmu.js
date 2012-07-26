@@ -15,10 +15,68 @@ function Mmu(size) {
     this.physicalMemory = new OctetBuffer(size);
     // structure of tlb, each tlb entry = 4 array entries, 2 tag entry (1 for page mask) + 2 data entries
     this.tlb = new Uint32Array(4*16);
+    for(i = 0; i < 48; i++)
+    {
+        this.tlb[i] = 0;
+    }
 
-    this.tlbLookup = function (addr, wr) {
+    this.writeTLBEntry = function(index, entrylo0, entrylo1, entryhi, pagemask)
+    {
+        var tlb = this.tlb;
+        var g = ((entrylo0 & entrylo1) >>> 0) & 0x1;
+        var pfn0 = (entrylo0 >>> 6) & 0xfffff;
+        var entrylo0low = ((entrylo0) & 0x3f) >>> 0;
+        var pfn1 = (entrylo1 >>> 6) & 0xfffff;
+        var entrylo1low = ((entrylo1) & 0x3f) >>> 0;
+        var vpn2 = (entryhi >>> 13);
+        var asid = (entryhi & 0xff) >>> 0;
+
+        tlb[index] = pagemask;//(pagemask >>> 13) & 0xfff;
+        tlb[index+1] = ((vpn2 << 9) | (g << 8) | asid) >>> 0;
+        tlb[index+2] = (pfn0 << 5) | entrylo0low;
+        tlb[index+3] = (pfn1 << 5) | entrylo1low;
+    }
+
+    this.readTLBEntry = function(index)
+    {
+        var ret = new Array[4];
+        var tlb = this.tlb; 
+
+        var pagemask_raw = tlb[index]; 
+        var pagemask = Math.pow(2,pagemask_raw*2)-1;
+
+        var tlbTag1 = tlb[index+1];
+
+        var vpn2 = tlbTag1 >>> 9;
+        var g = (tlbTag1 >>> 8) & 0x1;
+        var asid = (tlbTag1 & 0xff);
+
+        var tlbEntry0 = tlb[index+2];
+
+        var pfn0 = (tlbEntry0 >>> 5) & 0xfffff;
+        var entrylo0low = tlbEntry0 & 0x3f;
+
+        var tlbEntry1 = tlb[index+3];
+        
+        var pfn1 = (tlbEntry1 >>> 5) & 0xfffff;
+        var entrylo1low = tlbEntry1 & 0x3f;
+
+        var entrylo0 = entrylo0low | (pfn0 << 6); 
+        var entrylo1 = entrylo1low | (pfn1 << 6);
+
+        var entryhi = (asid | (vpn2 << 13)) >>> 0; 
+
+        ret[0] = entrylo0low;
+        ret[1] = entrylo1low;
+        ret[2] = entryhi;
+        ret[3] = pagemask;
+        return ret;
+    }
+
+
+    this.tlbLookup = function (addr, write) {
        var asid = this.cpu.entryHiReg.ASID;
-       var vpn = addr >>> 12;
+       var vpn2 = addr >>> 13;
        var tlb = this.tlb;
        
        for(var i = 0; i < 64; i+= 4)
@@ -31,11 +89,11 @@ function Mmu(size) {
                 var pagemask = Math.pow(2,pagemask_raw*2)-1;
                 var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
                 var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
-                var vpncomp = (vpn & pagemask_n);
-                if(vpn2entry == vpncomp)
+                var vpn2comp = (vpn2 & pagemask_n);
+                if(vpn2entry == vpn2comp)
                 {
                      var evenoddbit = 12 + pagemask_raw*2;
-                     var evenoddbitVal = (va >>> evenoddbit) & 0x1;
+                     var evenoddbitVal = (addr >>> evenoddbit) & 0x1;
                      var dataEntry = tlb[i+2+evenoddbitVal];
                      var validBit = dataEntry & 0x1;
                      var dirtyBit = (dataEntry >>> 1) & 0x1;
@@ -43,36 +101,52 @@ function Mmu(size) {
                      if(!validBit)
                      {
                         this.cpu.entryHiReg.vpn2 = vpn;
-                        // TODO: TLB invalid exception
-                        break;
+                        // TLB invalid exception
+                        if(write == 1)
+                        {
+                            this.cpu.triggerException(12,3); // excCode = TLBS 
+                        }
+                        else
+                        {
+                            this.cpu.triggerException(12,2); // excCode = TLBL
+                        }
+
+                        return addr;
                      } 
 
                      if(write && !dirtyBit)
                      {
                         this.cpu.entryHiReg.vpn2 = vpn;
-                        // TODO: TLB modified exception
-                        break;
+                        // TLB modified exception
+                        this.cpu.triggerException(11, 1); // excCode = Mod
+                        return addr;
                      }
 
-                     var offset_mask = 2047 | (pagemask * 4096); // (2^11-1) | (pagemask << 12)  
-                     var pa_mask = pagemask_n + 520192; // (0b1111111 << 12) | pagemask_n 
-                     var pa = (dataEntry & pa_mask) | (va & offset_mask); 
+                     var pagemask_lsb = pagemask & 0x1;
+                     var pagemask_n_lsb = pagemask_n & 0x1;
+
+                     var offset_mask = 4095 | (pagemask_lsb * 4096) | (pagemask * 8192); // (2^12-1) | (pagemask_lsb << 12) | (pagemask << 13)  
+                     var pa_mask = pagemask_n_lsb + (pagemask_n << 1) + 1040384; // (0b1111111 << 13) | pagemask_n << 1 | pagemask_n_lsb 
+                     var pfn = (dataEntry >>> 5) & pa_mask;
+                     var pa = (pfn << 12) | (addr & offset_mask); 
                      return pa;
                 }
            }
 
        }
 
-        this.cpu.entryHiReg.vpn2 = vpn;
+        this.cpu.entryHiReg.vpn2 = vpn2;
 
-        if(this.cpu.statusRegister.EXL == 0)
+        // TLB refill exception
+        if(write == 1)
         {
-            // TODO: TLB Refill exception
+            this.cpu.triggerException(11,3); // excCode = TLBS
         }
         else
         {
-            // TODO: TLB Invalid exception
+            this.cpu.triggerException(11,2); // excCode = TLBL
         }
+
     }            
     
     this.addressTranslation = function(va, write) {
