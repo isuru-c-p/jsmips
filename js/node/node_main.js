@@ -175,18 +175,18 @@ addCommand("physmemsize", function (s,command) {
 addCommand("readb", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
-    
-    var limit = emu.mmu.getPhysicalSize();
-    
-    if(addr < 0 || addr >= limit){
-        s.write("ERROR: badaddr\n");
-        return;
-    }
-    
     var val = emu.mmu.readByte(addr);
-
     s.write("ok "+ val.toString(16) +'\n');
 });
+
+
+addCommand("readword", function (s,command) {
+    var addr = command.split(" ")[1];
+    addr = parseInt(addr,16);
+    var val = emu.mmu.readWord(addr);
+    s.write("ok "+ val.toString(16) +'\n');
+});
+
 
 addCommand("writeb", function (s,command) {
     var addr = command.split(" ")[1];
@@ -223,10 +223,8 @@ addCommand("shutdown", function(s,command){
 function handleCommand(data) {
 
     data = new String(data).split("\n")[0];
-    DEBUG("got command - " + data);
     for(var i = 0 ; i < commands.length ; i++){
         if(data.substr(0,commands[i].length) == commands[i]) {
-            DEBUG("executing command " + commands[i]);
             commandLUT[commands[i]](this,data);
             return;
         }

@@ -1,4 +1,4 @@
-LOG_LEVEL = 1
+LOG_LEVEL = 2
 
 function terminal(m) {
     console.log(m);

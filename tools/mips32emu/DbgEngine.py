@@ -15,7 +15,7 @@ class DbgEngine(object):
             return self.disasmCache.get(op)
         except:
             t,fname = tempfile.mkstemp()
-            os.write(t,struct.pack(">B",op))
+            os.write(t,struct.pack(">L",op))
             os.close(t)
             dis = subprocess.check_output(['mips-linux-objdump','-bbinary', '-mmips','-EB',  '-D', fname])
             os.remove(fname)
@@ -24,6 +24,13 @@ class DbgEngine(object):
             return dis
     def readByte(self,addr):
         self.s.send("readb "+hex(addr)+'\n')
+        res = self.s.recv(1024)
+        if res.startswith('ok'):
+            return int(res.split(' ')[1],16)
+        else:
+            raise Exception("reading byte failed")
+    def readWord(self,addr):
+        self.s.send("readword "+hex(addr)+'\n')
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)

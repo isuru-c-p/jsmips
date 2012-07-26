@@ -21,7 +21,7 @@ function Mmu(size) {
        var vpn = addr >>> 12;
        var tlb = this.tlb;
        
-       for(i = 0; i < 64; i+= 4)
+       for(var i = 0; i < 64; i+= 4)
        {
            var tlbentry = tlb[i+1];
 

@@ -37,7 +37,7 @@ class AssemblyViewPanel(wx.Panel):
             if curInstrAddr < 0:
                 op = None
             else:
-                op = self.dbg.readByte(curInstrAddr)
+                op = self.dbg.readWord(curInstrAddr)
             if count == pcIdx:
                 dc.SetBrush(wx.Brush('#ff0000'))
                 dc.DrawRectangle(0,i+1, sx, 19)
