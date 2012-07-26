@@ -74,7 +74,7 @@ function Mmu(size) {
     }
 
 
-    this.tlbLookup = function (addr, wr) {
+    this.tlbLookup = function (addr, write) {
        var asid = this.cpu.entryHiReg.ASID;
        var vpn2 = addr >>> 13;
        var tlb = this.tlb;
@@ -101,15 +101,25 @@ function Mmu(size) {
                      if(!validBit)
                      {
                         this.cpu.entryHiReg.vpn2 = vpn;
-                        // TODO: TLB invalid exception
-                        break;
+                        // TLB invalid exception
+                        if(write == 1)
+                        {
+                            this.cpu.triggerException(12,3); // excCode = TLBS 
+                        }
+                        else
+                        {
+                            this.cpu.triggerException(12,2); // excCode = TLBL
+                        }
+
+                        return addr;
                      } 
 
                      if(write && !dirtyBit)
                      {
                         this.cpu.entryHiReg.vpn2 = vpn;
-                        // TODO: TLB modified exception
-                        break;
+                        // TLB modified exception
+                        this.cpu.triggerException(11, 1); // excCode = Mod
+                        return addr;
                      }
 
                      var pagemask_lsb = pagemask & 0x1;
@@ -125,16 +135,18 @@ function Mmu(size) {
 
        }
 
-        this.cpu.entryHiReg.vpn2 = vpn;
+        this.cpu.entryHiReg.vpn2 = vpn2;
 
-        if(this.cpu.statusRegister.EXL == 0)
+        // TLB refill exception
+        if(write == 1)
         {
-            // TODO: TLB Refill exception
+            this.cpu.triggerException(11,3); // excCode = TLBS
         }
         else
         {
-            // TODO: TLB Invalid exception
+            this.cpu.triggerException(11,2); // excCode = TLBL
         }
+
     }            
     
     this.addressTranslation = function(va, write) {

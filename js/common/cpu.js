@@ -447,7 +447,8 @@ function MipsCpu () {
     this.C0Registers[15] = new processorIDRegister();
     this.C0Registers[17] = new LLAddrRegister();
 
-    this.exceptionFlags = new Uint32Array(29);
+    this.exceptionFlags = new Uint32Array(30);
+    this.excCodes = new Uint32Array(30);
  
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
@@ -462,7 +463,12 @@ function MipsCpu () {
 	this.delaySlot = false;
     this.exceptionOccured = false;
 
-    this.excCode = 0; 
+    this.triggerException = function(exception, exc_code)
+    {
+        this.exceptionOccured = true;
+        this.excCodes[exception] = exc_code;
+        this.exceptionFlags[exception] = 1;
+    }
 
     this.getExceptionVectorAddress = function(exception)
     {
@@ -486,9 +492,9 @@ function MipsCpu () {
             /*case 2:
             case 3:
             case 8:
-            case 13:
-            case 20:
-            case 28:
+            case 14:
+            case 21:
+            case 29:
                 if(EJTAG ProbTrap==0)
                 {
                     return 0xBFC00480;
@@ -506,9 +512,9 @@ function MipsCpu () {
                 return genBase + 0x200;
 
             case 11: 
-            case 25:
             case 26:
             case 27:
+            case 28:
                 if(EXL == 1)
                 {
                     return genBase + 0x180;
@@ -547,7 +553,7 @@ function MipsCpu () {
         var exceptionFlags = this.exceptionFlags;
         var exceptionNum = -1;
 
-        for(i = 0; i < 29; i++)
+        for(i = 0; i < 30; i++)
         {
             if(exceptionFlags[i] == 1)
             {
@@ -562,7 +568,7 @@ function MipsCpu () {
             return;
         }
 
-        causeReg.EXC = this.excCode;
+        causeReg.EXC = this.excCodes[exceptionNum];
         causeReg.CE = 0; // TODO: set CE to a proper value on CoProcessor unusable exception
        
         var excAddress = this.getExceptionVectorAddress(exceptionNum);
@@ -571,6 +577,10 @@ function MipsCpu () {
         PC.putUInt32(excAddress);
 
         this.exceptionOccured = false;
+        for(i = 0; i < 30; i++)
+        {
+            this.exceptionFlags[i] = 0;
+        }
     }
 
     this.isKernelMode = function () {
