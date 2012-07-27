@@ -1,5 +1,5 @@
 .global entry
 
 entry:
-    lui $sp,0x01ff
+    lui $sp,0xa1ff
     j kmain
