@@ -906,7 +906,7 @@ function MipsCpu () {
 		DEBUG("SH");
 		
 		var address = ((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0;
-		var rt_val = this.genRegistesr[rt].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
 		
 		this.mmu.writeHalfWord(address, rt_val);
 		this.advancePC();		
@@ -952,6 +952,16 @@ function MipsCpu () {
 		var val = (this.genRegisters[rt].asUInt32()) / Math.pow(2,this.genRegisters[rs].asUInt32()&0x0000001f);
 		this.genRegisters[rd].putUInt32(val);
 		this.advancePC();
+	}
+	
+	this.SC = function ( op ) {
+        WARN("SC unimple");
+        this.advancePC();
+	}
+	
+	this.TNE = function (op) {
+	    WARN("TNE unimple");
+	    this.advancePC();
 	}
 	
 	this.SRA = function ( op ){
@@ -1425,7 +1435,7 @@ function MipsCpu () {
 		
 		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c);
 		var halfwordVal = this.mmu.readHalfWord(this.genRegisters[rt].asUInt32());
-		var signed = (byteVal >>> 15);
+		var signed = (halfwordVal >>> 15);
 		
 		if(signed)
 		{
