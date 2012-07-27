@@ -977,7 +977,18 @@ function MipsCpu () {
 	}
 	
 	this.TNE = function (op) {
-	    WARN("TNE unimple");
+        DEBUG("TNE");
+        var rs = getRs(op);
+        var rt = getRt(op);
+
+        var rs_val = this.genRegisters[rs].asUInt32();
+        var rt_val = this.genRegisters[rt].asUInt32();
+
+        if(rs_val != rt_val)
+        {
+            this.triggerException(20, 13);
+        }
+
 	    this.advancePC();
 	}
 	
