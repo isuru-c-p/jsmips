@@ -25,9 +25,9 @@ function Mmu(size) {
         var tlb = this.tlb;
         var g = ((entrylo0 & entrylo1) >>> 0) & 0x1;
         var pfn0 = (entrylo0 >>> 6) & 0xfffff;
-        var entrylo0low = ((entrylo0) & 0x3f) >>> 0;
+        var entrylo0low = ((entrylo0) & 0x3e) >>> 1;
         var pfn1 = (entrylo1 >>> 6) & 0xfffff;
-        var entrylo1low = ((entrylo1) & 0x3f) >>> 0;
+        var entrylo1low = ((entrylo1) & 0x3e) >>> 1;
         var vpn2 = (entryhi >>> 13);
         var asid = (entryhi & 0xff) >>> 0;
 
@@ -79,18 +79,27 @@ function Mmu(size) {
        var asid = this.cpu.entryHiReg.ASID;
        var vpn2 = addr >>> 13;
        var tlb = this.tlb;
-       
+
+       console.log("Lookup ASID: " + asid + ", VPN2: " + vpn2);       
+
        for(var i = 0; i < 64; i+= 4)
        {
            var tlbentry = tlb[i+1];
+           console.log(i);
+           console.log("Entry ASID: " + (tlbentry & 0xff));
+           var globalBit = (tlbentry >>> 8) & 0x1;
+           
+           console.log("Global: " + globalBit);
 
-           if(((tlbentry & 0xff) == asid) | ((tlbentry >>> 8) == 0))
+           if(((tlbentry & 0xff) == asid) | (globalBit == 0))
            {
                 var pagemask_raw = tlb[i];
                 var pagemask = Math.pow(2,pagemask_raw*2)-1;
                 var pagemask_n = (~(pagemask) & 0xfff) >>> 0;
                 var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
                 var vpn2comp = (vpn2 & pagemask_n);
+
+                console.log("VPN2Entry: " + vpn2entry.toString(16) + ", VPN2Comp: " + vpn2comp.toString(16));
                 if(vpn2entry == vpn2comp)
                 {
                      console.log("TLB match.");
@@ -102,8 +111,9 @@ function Mmu(size) {
                      
                      if(!validBit)
                      {
-                        this.cpu.entryHiReg.vpn2 = vpn;
+                        this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB invalid exception
+                        console.log("invalid tlb entry");
                         if(write == 1)
                         {
                             this.cpu.triggerException(12,3); // excCode = TLBS 
@@ -118,7 +128,8 @@ function Mmu(size) {
 
                      if(write && !dirtyBit)
                      {
-                        this.cpu.entryHiReg.vpn2 = vpn;
+                        console.log("tlb modified exception");
+                        this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB modified exception
                         this.cpu.triggerException(11, 1); // excCode = Mod
                         return addr;
@@ -131,6 +142,7 @@ function Mmu(size) {
                      var pa_mask = pagemask_n_lsb + (pagemask_n << 1) + 1040384; // (0b1111111 << 13) | pagemask_n << 1 | pagemask_n_lsb 
                      var pfn = (dataEntry >>> 5) & pa_mask;
                      var pa = (pfn << 12) | (addr & offset_mask); 
+                     console.log("pfn: " + pfn.toString(16) + ", pa: " + pa.toString(16));
                      return pa;
                 }
            }
