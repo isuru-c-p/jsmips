@@ -1527,7 +1527,7 @@ function MipsCpu () {
 			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
 		}
 		
-		rtMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		var rtMaskVal = ((0xffffffff - wordMaskVal) & 0xffffffff) >>> 0; 
 		
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
@@ -1553,7 +1553,7 @@ function MipsCpu () {
 			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
 		}
 		
-		rtMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		var rtMaskVal = ((0xffffffff - wordMaskVal) & 0xffffffff) >>> 0; 
 		
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
@@ -1594,7 +1594,7 @@ function MipsCpu () {
 			rtMaskVal = rtMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
 		}
 		
-		wordMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		var wordMaskVal = ((0xffffffff - rtMaskVal) & 0xffffffff) >>> 0; 
 		
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
@@ -1620,7 +1620,7 @@ function MipsCpu () {
 			rtMaskVal = rtMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
 		}
 		
-		wordMaskVal = ((0xffffffff - maskVal) & 0xffffffff) >>> 0; 
+		var wordMaskVal = ((0xffffffff - rtMaskVal) & 0xffffffff) >>> 0; 
 		
 		wordVal = (wordVal & wordMaskVal);
 		rt_val = (rt_val & rtMaskVal);
