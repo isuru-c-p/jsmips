@@ -203,7 +203,7 @@ function StatusRegister() {
 	this.R = 0; // This bit must be ignored on writes and read as zero, bit 26
 	this.RE = 0; // Used to enable reverse-endian memory references, bit 25
 	this.zero = 0; // This bit must be written as zero; returns zero on read, bit 24:23
-	this.BEV = 1; // Controls the location of exception vectors, bit 22
+	this.BEV = 0; // Controls the location of exception vectors, bit 22
 	this.TS = 0; // TLB shutdown, bit 21
 	this.SR = 0; // bit 20
 	this.NMI = 0; // bit 19
