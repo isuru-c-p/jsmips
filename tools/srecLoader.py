@@ -3,6 +3,8 @@ import mips32emu.DbgEngine
 
 dbg = mips32emu.DbgEngine.DbgEngine()
 
+dbg.dbgBreak()
+
 for l in open(sys.argv[1]):
     t = l[1]
     if l[0] != 'S':

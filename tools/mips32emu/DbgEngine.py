@@ -9,6 +9,7 @@ class DbgEngine(object):
     def __init__(self):
         self.s =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect(('localhost', 8123))
+        self.pctofnLookup = {}
         self.disasmCache = util.Cache(50000)
     def disassemble(self,op):
         try:
@@ -22,6 +23,20 @@ class DbgEngine(object):
             dis = [l[6:] for l in dis.split("\n") if l.startswith("   0:\t") ].pop()
             self.disasmCache.put(op,dis)
             return dis
+    def dbgBreak(self):
+        self.s.send("break\n")
+        res = self.s.recv(1024)
+        if res.startswith('ok'):
+            return
+        else:
+            raise Exception("break failed")
+    def step(self):
+        self.s.send("step\n")
+        res = self.s.recv(1024)
+        if res.startswith('ok'):
+            return
+        else:
+            raise Exception("step failed") 
     def readByte(self,addr):
         self.s.send("readb "+hex(addr)+'\n')
         res = self.s.recv(1024)
@@ -68,3 +83,20 @@ class DbgEngine(object):
             return int(res.split(' ')[1],16)
         else:
             raise Exception("reading physMemSize failed")
+            
+    def getFunctionName(self,pc):
+        distance = 0xffffffff
+        ret = "???"
+        for k in self.pctofnLookup.keys():
+            diff = pc - k
+            if  diff < distance and diff >= 0:
+                distance = diff
+                ret = self.pctofnLookup[k]
+        return ret
+    def loadSystemMapFile(self,mf):
+        self.pctofnLookup = {}
+        for line in open(mf):
+            fields = line.split(" ")
+            addr = int(fields[0],16)
+            fn = fields[2].strip()
+            self.pctofnLookup[addr] = fn
