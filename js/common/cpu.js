@@ -464,7 +464,7 @@ function MipsCpu () {
 	this.delaySlot = false;
     this.exceptionOccured = false;
     
-    this.LLbit = 0;
+    this.LLBit = 0;
 
     this.triggerException = function(exception, exc_code)
     {
@@ -1484,7 +1484,7 @@ function MipsCpu () {
 		this.genRegisters[rt].putUInt32(addr)
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
 		this.llAddrRegister.putUInt32(addr);
-		this.LLbit = 1;
+		this.LLBit = 1;
 		this.advancePC();
 	}	
 	
