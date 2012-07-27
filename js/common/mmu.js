@@ -75,6 +75,7 @@ function Mmu(size) {
 
 
     this.tlbLookup = function (addr, write) {
+       console.log("TLB lookup of addr: " + addr.toString(16));
        var asid = this.cpu.entryHiReg.ASID;
        var vpn2 = addr >>> 13;
        var tlb = this.tlb;
@@ -92,6 +93,7 @@ function Mmu(size) {
                 var vpn2comp = (vpn2 & pagemask_n);
                 if(vpn2entry == vpn2comp)
                 {
+                     console.log("TLB match.");
                      var evenoddbit = 12 + pagemask_raw*2;
                      var evenoddbitVal = (addr >>> evenoddbit) & 0x1;
                      var dataEntry = tlb[i+2+evenoddbitVal];
@@ -147,6 +149,8 @@ function Mmu(size) {
             this.cpu.triggerException(11,2); // excCode = TLBL
         }
 
+        console.log("TLB miss!");
+        return addr;
     }            
     
     this.addressTranslation = function(va, write) {
@@ -165,7 +169,7 @@ function Mmu(size) {
                 return (va - 0xa0000000);
             }
             // kuseg when ERL = 1
-            else if((top3 < 0x4) & (this.cpu.statusRegister.ERL == 1))
+            else if((top3 == 0x6) & (this.cpu.statusRegister.ERL == 1))
             {
                return va; 
             }
@@ -229,7 +233,9 @@ function Mmu(size) {
 	
 	this.writeWord = function(address, value)
 	{
+        console.log("VA: " + address.toString(16));
         var addr = this.addressTranslation(address,1);
+        console.log("PA: " + addr.toString(16));
 		if(this.cpu.getEndianness() == 0)
 		{
 			return this.physicalMemory.putUInt32LE(addr, value >>> 0);

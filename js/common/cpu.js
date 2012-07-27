@@ -453,6 +453,7 @@ function MipsCpu () {
     this.HI = new GeneralRegister();
 	this.LO = new GeneralRegister();
     
+    this.entryHiReg = this.C0Registers[10];
 	this.statusRegister = this.C0Registers[12];
 	this.configRegister = new ConfigRegister();
 	this.config1Register = new Config1Register();
@@ -1335,8 +1336,8 @@ function MipsCpu () {
 	
 	this.J = function ( op ) {
         
-        var top = this.PC.asUInt32()&0xc0000000;
-        var addr = top| ((op&0x3ffffff)*4);
+        var top = (this.PC.asUInt32()&0xf0000000) >>> 0;
+        var addr = (top| ((op&0x3ffffff)*4)) >>> 0;
         DEBUG("jumping to address " + addr.toString(16));
         this.doDelaySlot();
         this.PC.putUInt32(addr);
