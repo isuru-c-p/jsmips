@@ -463,6 +463,8 @@ function MipsCpu () {
 	
 	this.delaySlot = false;
     this.exceptionOccured = false;
+    
+    this.LLbit = 0;
 
     this.triggerException = function(exception, exc_code)
     {
@@ -955,7 +957,22 @@ function MipsCpu () {
 	}
 	
 	this.SC = function ( op ) {
-        WARN("SC unimple");
+		var rt = getRt(op);
+		var base = getRs(op);
+		var addr = op&0x0000ffff + this.genRegisters[base].asUInt32();
+		WARN("SC implement address error???")
+		addr = addr >>> 0
+		var val = this.genRegisters[rt].asUInt32();
+		if(this.LLBit == 1){
+		    this.mmu.writeWord(addr,val);
+		    this.genRegisters[rt].putUInt32(1);
+		}else {
+		    this.genRegisters[rt].putUInt32(0);
+		}
+		
+		this.LLBit = 0;
+		
+		
         this.advancePC();
 	}
 	
@@ -1461,13 +1478,13 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
-		DEBUG("LL");
+		WARN("LL implement address error???")
 		var addr = this.genRegisters[rs].asUInt32()+c;
 		
 		this.genRegisters[rt].putUInt32(addr)
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
 		this.llAddrRegister.putUInt32(addr);
-		// TODO set LL whatever it is
+		this.LLbit = 1;
 		this.advancePC();
 	}	
 	
