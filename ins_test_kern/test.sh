@@ -19,7 +19,7 @@ runTest() {
     dbgsend "reset"
     dbgsend "setll 0" 
     echo "loading srec image"
-    python ../tools/srecLoader.py $1 > /dev/null
+    python ../tools/srecLoader.py $1 --setentry > /dev/null
     echo "starting $KERNEL"
     dbgsend "run"
     if ! wait $NODE_PID ; then
