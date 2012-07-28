@@ -1148,6 +1148,30 @@ function MipsCpu () {
 		this.advancePC();
 	}
 
+    this.MULTU = function ( op ) {
+		var rs = getRs(op);
+		var rt = getRt(op);
+		
+		var number1 = this.genRegisters[rs].asUInt32();
+		var number2 = this.genRegisters[rt].asUInt32();
+				
+		var number1Hi = number1 >>> 16;
+		var number1Lo = (number1 & 0xffff);
+		var number2Hi = number2 >>> 16;
+		var number2Lo = (number2 & 0xffff);
+		var z2 = (number1Hi * number2Hi);
+		var z1 = (number1Hi * number2Lo) + (number1Lo * number2Hi);
+		var z0 = (number1Lo * number2Lo);
+
+		var result = (z2*Math.pow(2,32) + z1*Math.pow(2,16) + z0);
+
+		var t1 = (z1*Math.pow(2,16) + z0);
+		this.HI.putUInt32((z2 + ((t1-t1%4294967296) / 4294967296)) >>> 0);
+		this.LO.putUInt32(((z1*Math.pow(2,16) + z0) & 0xffffffff) >>> 0);
+
+        this.advancePC();   
+    }
+
     this.MUL = function ( op ) {
         var HI_old = this.HI.asUInt32();
         var LO_old = this.LO.asUInt32();
@@ -1157,8 +1181,8 @@ function MipsCpu () {
         var rd = getRd(op);
         this.genRegisters[rd].putUInt32(this.LO.asUInt32());
 
-        this.HI.setUInt32(HI_old);
-        this.LO.setUInt32(LO_old);
+        this.HI.putUInt32(HI_old);
+        this.LO.putUInt32(LO_old);
 
         // advancePC() done in this.MULT
     }
@@ -2084,8 +2108,6 @@ function MipsCpu () {
         DEBUG("SYSCALL");
         var v0_val = this.genRegisters[2].asUInt32();
         var a0_val = this.genRegisters[4].asUInt32();
-
-
 
         if(v0_val == 4)
         {

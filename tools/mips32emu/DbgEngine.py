@@ -100,3 +100,9 @@ class DbgEngine(object):
             addr = int(fields[0],16)
             fn = fields[2].strip()
             self.pctofnLookup[addr] = fn
+
+    def loadSrec(self,srecString,setEntry):
+        self.s.send("loadsrec %s %s" % (setEntry,srecString))
+        res = self.s.recv(1024)
+        if not res.startswith('ok'):
+            raise Exception("loading srec string failed")
