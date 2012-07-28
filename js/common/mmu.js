@@ -285,29 +285,29 @@ function Mmu(size) {
 
             if(t == '0')
             {
-                DEBUG("Ignoring SREC header");
+                //DEBUG("Ignoring SREC header");
             } 
             else if(t == '1')
             {
                 addr = l.substring(4,8);
                 data = l.substring(8, dataEnd);  
-                DEBUG("data 1 srec " + addr + " " + data);
+                //DEBUG("data 1 srec " + addr + " " + data);
             }
             else if(t == '2')
             {
                 addr = l.substring(4,10);
                 data = l.substring(10, dataEnd);
-                DEBUG("data 2 srec " + addr + " " + data);
+                //DEBUG("data 2 srec " + addr + " " + data);
             }
             else if(t == '3')
             {
                 addr = l.substring(4,12);
                 data = l.substring(12, dataEnd);
-                DEBUG("data 3 srec " + addr + " " + data);
+                //DEBUG("data 3 srec " + addr + " " + data);
             }
             else if(t == '5')
             {
-                DEBUG("Ignoring SREC record count field.");
+                //DEBUG("Ignoring SREC record count field.");
             }
             else if((t == '7') | (t == '8') | (t == '9'))
             {
