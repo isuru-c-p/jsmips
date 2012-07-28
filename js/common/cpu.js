@@ -959,7 +959,7 @@ function MipsCpu () {
 	this.SC = function ( op ) {
 		var rt = getRt(op);
 		var base = getRs(op);
-		var addr = op&0x0000ffff + this.genRegisters[base].asUInt32();
+		var addr = getSigned16(op&0x0000ffff) + this.genRegisters[base].asUInt32();
 		WARN("SC implement address error???")
 		addr = addr >>> 0
 		var val = this.genRegisters[rt].asUInt32();
