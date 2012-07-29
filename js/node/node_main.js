@@ -96,7 +96,7 @@ addCommand("isrunning", function (s,command) {
 addCommand("run", function (s,command) {
     isRunning = true;
     setInterval( function () {
-        for ( var i = 0 ; i < 50 ; i++ ) {
+        for ( var i = 0 ; i < 500 ; i++ ) {
             if(isRunning){
                 emu.step();
             }
