@@ -1157,8 +1157,8 @@ function MipsCpu () {
         var rd = getRd(op);
         this.genRegisters[rd].putUInt32(this.LO.asUInt32());
 
-        this.HI.setUInt32(HI_old);
-        this.LO.setUInt32(LO_old);
+        this.HI.putUInt32(HI_old);
+        this.LO.putUInt32(LO_old);
 
         // advancePC() done in this.MULT
     }
