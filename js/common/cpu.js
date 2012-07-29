@@ -275,7 +275,7 @@ function CauseRegister()
 function processorIDRegister()
 {
 	// all fields are read only by software
-	this.R = 0; // bits 31:24
+	this.R = 128; // bits 31:24
 	this.companyID = 1; // bits 23:16
 	this.processorID = 128; // bits 15:8, (128 for 4kc)
 	this.revision = 11; // bits 7:0, latest version according to manual
@@ -1265,8 +1265,9 @@ function MipsCpu () {
         DEBUG("MFC0");
         var rt = getRt(op);
         var cd = getRd(op);
+        var select = (op&0x0000ffff);
 
-        this.genRegisters[rt].putUInt32(this.getC0Register(cd).asUInt32());
+        this.genRegisters[rt].putUInt32(this.getC0Register(cd, select).asUInt32());
         this.advancePC();
     }
 	
@@ -1275,8 +1276,11 @@ function MipsCpu () {
         var rt = getRt(op);
         var cd = getRd(op);
 		var rt_val = this.genRegisters[rt].asUInt32();
+        var select = (op&0x0000ffff);
+
+        
 		
-		this.getC0Register(cd).putUInt32(rt_val);
+		this.getC0Register(cd,select).putUInt32(rt_val);
         this.advancePC();
     }	
 	
