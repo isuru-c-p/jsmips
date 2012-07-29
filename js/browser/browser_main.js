@@ -1,9 +1,8 @@
 $(document).ready(function() {
 INFO("Starting MIPS 4kc js emulator.");
 emu = new Emulator();
-emu.mmu.physicalMemory.loadHexString(browser_hex,0);
-emu.cpu.PC.putUInt32(entryPoint);
-
+INFO("Parsing SREC.");
+emu.mmu.loadSREC(browser_srec, 1);
 
 PCLogCounter = 0;
 
