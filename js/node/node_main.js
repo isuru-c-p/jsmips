@@ -216,6 +216,15 @@ addCommand("shutdown", function(s,command){
     process.exit(0);
 });
 
+addCommand("loadsrec", function (s,command) {
+    var setEntry = command.split(" ")[1];
+    var srecString = command.split(" ")[2];
+    setEntry = parseInt(setEntry,16);
+    
+    emu.mmu.loadSREC(srecString, setEntry);
+    s.write("ok\n");
+});
+
 // END debugging interface
 
 

@@ -75,21 +75,21 @@ function Mmu(size) {
 
 
     this.tlbLookup = function (addr, write) {
-       console.log("TLB lookup of addr: " + addr.toString(16));
+       //console.log("TLB lookup of addr: " + addr.toString(16));
        var asid = this.cpu.entryHiReg.ASID;
        var vpn2 = addr >>> 13;
        var tlb = this.tlb;
 
-       console.log("Lookup ASID: " + asid + ", VPN2: " + vpn2);       
+       //console.log("Lookup ASID: " + asid + ", VPN2: " + vpn2);       
 
        for(var i = 0; i < 64; i+= 4)
        {
            var tlbentry = tlb[i+1];
-           console.log(i);
-           console.log("Entry ASID: " + (tlbentry & 0xff));
+           //console.log(i);
+           //console.log("Entry ASID: " + (tlbentry & 0xff));
            var globalBit = (tlbentry >>> 8) & 0x1;
            
-           console.log("Global: " + globalBit);
+           //console.log("Global: " + globalBit);
 
            if(((tlbentry & 0xff) == asid) | (globalBit == 0))
            {
@@ -99,10 +99,10 @@ function Mmu(size) {
                 var vpn2entry = (tlbentry >>> 9) & pagemask_n ;
                 var vpn2comp = (vpn2 & pagemask_n);
 
-                console.log("VPN2Entry: " + vpn2entry.toString(16) + ", VPN2Comp: " + vpn2comp.toString(16));
+                //console.log("VPN2Entry: " + vpn2entry.toString(16) + ", VPN2Comp: " + vpn2comp.toString(16));
                 if(vpn2entry == vpn2comp)
                 {
-                     console.log("TLB match.");
+                     //console.log("TLB match.");
                      var evenoddbit = 12 + pagemask_raw*2;
                      var evenoddbitVal = (addr >>> evenoddbit) & 0x1;
                      var dataEntry = tlb[i+2+evenoddbitVal];
@@ -245,9 +245,9 @@ function Mmu(size) {
 	
 	this.writeWord = function(address, value)
 	{
-        console.log("VA: " + address.toString(16));
+        //console.log("VA: " + address.toString(16));
         var addr = this.addressTranslation(address,1);
-        console.log("PA: " + addr.toString(16));
+        //console.log("PA: " + addr.toString(16));
 		if(this.cpu.getEndianness() == 0)
 		{
 			return this.physicalMemory.putUInt32LE(addr, value >>> 0);
@@ -257,4 +257,92 @@ function Mmu(size) {
 			return this.physicalMemory.putUInt32BE(addr, value >>> 0);
 		}	
 	}
+
+    this.loadSREC = function(srecString, setEntry)
+    {
+        var srecLines = srecString.split("\n");
+
+        for(i = 0; i < srecLines.length; i++)
+        {
+            if(srecLines[i] == "")
+            {
+                continue;
+            }
+
+            var l = srecLines[i];
+            l = l.replace("\r","");
+            var t = l[1];
+
+            if(l[0] != 'S')
+            {
+                ERROR("Invalid srec record!");
+            }
+
+            var count = l.substring(2,4);
+            var addr = "";
+            var data = "";
+            var dataEnd = l.length-2;
+
+            if(t == '0')
+            {
+                //DEBUG("Ignoring SREC header");
+            } 
+            else if(t == '1')
+            {
+                addr = l.substring(4,8);
+                data = l.substring(8, dataEnd);  
+                //DEBUG("data 1 srec " + addr + " " + data);
+            }
+            else if(t == '2')
+            {
+                addr = l.substring(4,10);
+                data = l.substring(10, dataEnd);
+                //DEBUG("data 2 srec " + addr + " " + data);
+            }
+            else if(t == '3')
+            {
+                addr = l.substring(4,12);
+                data = l.substring(12, dataEnd);
+                //DEBUG("data 3 srec " + addr + " " + data);
+            }
+            else if(t == '5')
+            {
+                //DEBUG("Ignoring SREC record count field.");
+            }
+            else if((t == '7') | (t == '8') | (t == '9'))
+            {
+                count = parseInt(count,16)*2 -2;
+                addr = l.substring(4,4+count);
+                DEBUG("Entry point srec: " + addr);
+                
+                if(setEntry == 1)
+                {
+                    this.cpu.PC.putUInt32(parseInt(addr,16));
+                }
+            }
+            else
+            {
+                ERROR("Unknown SREC type: " + t);
+                return;
+            }
+
+            if((t == '1') | (t == '2') | (t == '3'))
+            {
+                if((data.length % 2) != 0)
+                {
+                    ERROR("Length of data in SREC record is not valid: " + data.length);
+                }
+                
+                addr = parseInt(addr, 16);
+                
+                for(j = 0; j < data.length; j+= 2)
+                {
+                   var dataByteStr = data.substring(j,j+2);
+                   var b = parseInt(dataByteStr,16);
+                   var offset = j/2;
+                   this.writeByte(addr + offset, b); 
+                }
+            }
+        }
+    }
 }
