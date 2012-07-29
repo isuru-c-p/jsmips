@@ -677,6 +677,7 @@ function MipsCpu () {
 		}
 		else
 		{
+            WARN("Overflow trap not implemented.");
 			// TODO Overflow trap
 		}
 		
