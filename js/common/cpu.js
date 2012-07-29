@@ -991,6 +991,12 @@ function MipsCpu () {
 
 	    this.advancePC();
 	}
+
+    this.BREAK = function (op) {
+        DEBUG("BREAK");
+        this.triggerException(16, 9);
+        this.advancePC();
+    }
 	
 	this.SRA = function ( op ){
 		DEBUG("SRA");
