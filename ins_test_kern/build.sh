@@ -21,7 +21,14 @@ buildKernel () {
 
 }
 
-for f in `ls tests/*.c`
-do 
-    buildKernel $f
-done
+
+
+
+if [ $# -eq 1 ]; then 
+    buildKernel $1
+else
+    for f in `ls tests/*.c`
+    do 
+        buildKernel $f
+    done
+fi
