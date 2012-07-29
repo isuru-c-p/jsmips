@@ -991,6 +991,12 @@ function MipsCpu () {
 
 	    this.advancePC();
 	}
+
+    this.BREAK = function (op) {
+        DEBUG("BREAK");
+        this.triggerException(16, 9);
+        this.advancePC();
+    }
 	
 	this.SRA = function ( op ){
 		DEBUG("SRA");
@@ -1309,7 +1315,7 @@ function MipsCpu () {
         var rs = getRs(op);
         var rd = getRd(op);
 
-        if(rt == 0)
+        if(this.genRegisters[rt].asUInt32() == 0)
         {
             this.genRegisters[rd].putUInt32(this.genRegisters[rs].asUInt32());
         }
