@@ -960,7 +960,7 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var base = getRs(op);
 		var addr = getSigned16(op&0x0000ffff) + this.genRegisters[base].asUInt32();
-		WARN("SC implement address error???")
+		//WARN("SC implement address error???")
 		addr = addr >>> 0
 		var val = this.genRegisters[rt].asUInt32();
 		if(this.LLBit == 1){
@@ -1519,7 +1519,7 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
-		WARN("LL implement address error???")
+		//WARN("LL implement address error???")
 		var addr = this.genRegisters[rs].asUInt32()+c;
 		
 		this.genRegisters[rt].putUInt32(addr)
