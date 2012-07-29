@@ -14,6 +14,11 @@ SECTIONS
     {
         *(.rodata*)
     }
+    
+    .rdata ALIGN (0x1000) :
+    {
+        *(.rdata*)
+    }
 
     .data ALIGN (0x1000) :
     {
