@@ -13,10 +13,10 @@ setInterval(function () {
         emu.step();
     }
     
-    if(PCLogCounter >= 10000){
+    /*if(PCLogCounter >= 10000){
         PCLogCounter = 0;
         INFO("PCsampler: " + emu.cpu.PC.asUInt32().toString(16))
-    }
+    }*/
 
 }, 0);
 });
