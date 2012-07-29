@@ -1,6 +1,6 @@
 set -e
 
-O="-O3"
+O="-O2"
 
 
 buildKernel () {
