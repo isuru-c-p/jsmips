@@ -4,5 +4,5 @@
 ./common/cpu.js
 ./common/mmu.js
 ./common/Emu.js
-./browser/browser_hex.js
+./browser/browser_srec.js
 ./browser/browser_main.js
