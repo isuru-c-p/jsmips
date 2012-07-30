@@ -1007,7 +1007,7 @@ function MipsCpu () {
 		var shamt = getSHAMT(op);
 		
 		var sign = (rt_val >>> 31);
-		var val = (rt_val & 0x7fffffff) >>> 0;
+		var val = (rt_val & 0xffffffff) >>> 0;
 		var shifted_val = (val >>> shamt);
 		
 		if(sign != 0)
