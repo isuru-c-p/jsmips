@@ -19,8 +19,8 @@ function OctetBuffer ( arg ) {
             throw ("invalid index into OctetBuffer - " + n);
         }
         
-        if(val > 65535 /* 2**32-1 */ || val < 0) {
-            throw ("invalid byte value - " + val );
+        if(val > 65535 /* 2**16-1 */ || val < 0) {
+            throw ("invalid half word value - " + val );
         }
         
         this.putByte( n+1 ,  val &  0xff );
