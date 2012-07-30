@@ -909,7 +909,7 @@ function MipsCpu () {
 		DEBUG("SH");
 		
 		var address = ((this.genRegisters[rs].asUInt32() + c) & 0xffffffff) >>> 0;
-		var rt_val = this.genRegisters[rt].asUInt32();
+		var rt_val = (this.genRegisters[rt].asUInt32() & 0xffff) >>> 0;
 		
 		this.mmu.writeHalfWord(address, rt_val);
 		this.advancePC();		
