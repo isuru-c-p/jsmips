@@ -9,7 +9,7 @@ void print(char * s){
         "syscall\n"
         : 
         : "r" (s)
-        : "v0", "a0" );
+        : "v0", "a0", "memory" );
     
 }
 

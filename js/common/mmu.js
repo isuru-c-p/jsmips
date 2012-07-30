@@ -212,12 +212,12 @@ function Mmu(size) {
 
 	this.readHalfWord = function(address)
 	{
-		return this.physicalMemory.getUInt16LE(this.addressTranslation(address,0));
+		return this.physicalMemory.getUInt16BE(this.addressTranslation(address,0));
 	}
 	
     this.writeHalfWord = function(address, val)
     {
-        this.physicalMemory.putUInt16LE(this.addressTranslation(address,1), val);
+        this.physicalMemory.putUInt16BE(this.addressTranslation(address,1), val);
     }	
 
     this.readByte = function(address)
