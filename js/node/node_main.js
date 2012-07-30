@@ -258,5 +258,5 @@ var dbgserver = net.createServer(function(c) { //'connection' listener
 });
 
 dbgserver.listen(8123, function() { //'listening' listener
-    console.log('server bound');
+    LOG('server bound');
 });

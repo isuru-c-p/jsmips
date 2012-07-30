@@ -128,7 +128,7 @@ function Mmu(size) {
 
                      if(write && !dirtyBit)
                      {
-                        console.log("tlb modified exception");
+                        ERROR("tlb modified exception");
                         this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB modified exception
                         this.cpu.triggerException(11, 1); // excCode = Mod
@@ -142,7 +142,7 @@ function Mmu(size) {
                      var pa_mask = pagemask_n_lsb + (pagemask_n << 1) + 1040384; // (0b1111111 << 13) | pagemask_n << 1 | pagemask_n_lsb 
                      var pfn = (dataEntry >>> 5) & pa_mask;
                      var pa = (pfn << 12) | (addr & offset_mask); 
-                     console.log("pfn: " + pfn.toString(16) + ", pa: " + pa.toString(16));
+                     DEBUG("pfn: " + pfn.toString(16) + ", pa: " + pa.toString(16));
                      return pa;
                 }
            }
@@ -161,7 +161,7 @@ function Mmu(size) {
             this.cpu.triggerException(11,2); // excCode = TLBL
         }
 
-        console.log("TLB miss!");
+        DEBUG("TLB miss!");
         return addr;
     }            
     
