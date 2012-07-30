@@ -18,6 +18,10 @@ function extractArgument( arg, defaultVal  ) {
 var dbgport = extractArgument("--dbgport","8123")
 var uartPort = extractArgument("--uartport","8124")
 
+if (extractArgument("--quiet","false") == "true"){
+    LOG_LEVEL = -1;
+}
+
 dbgport = parseInt(dbgport)
 uartPort = parseInt(uartPort)
 
@@ -258,5 +262,5 @@ var dbgserver = net.createServer(function(c) { //'connection' listener
 });
 
 dbgserver.listen(8123, function() { //'listening' listener
-    console.log('server bound');
+    INFO('server bound');
 });

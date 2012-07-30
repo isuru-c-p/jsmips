@@ -14,10 +14,6 @@ buildKernel () {
     mips-linux-ld -T linker.ld -o kernel_$NAME.elf entry.o kernel_$NAME.o kernel_common.o
     mips-linux-objdump -D kernel_$NAME.elf > kernel_$NAME.map
     mips-linux-objcopy -O srec kernel_$NAME.elf kernel_$NAME.srec
-    python tohex.py kernel_$NAME.elf > kernel_$NAME.hex
-    echo `mips-linux-nm kernel_$NAME.elf | grep entry | cut -c 9-16` > kernel_$NAME.entry
-    echo "built kernel with entry point:"
-    cat kernel_$NAME.entry
 
 }
 
