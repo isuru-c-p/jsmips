@@ -1549,7 +1549,6 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
-		console.log("LWL --------");
 		
 		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
 		var rtVal = this.genRegisters[rt].asUInt32()
@@ -1585,14 +1584,13 @@ function MipsCpu () {
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
 		
-		
+
 		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
 		var rtVal = this.genRegisters[rt].asUInt32()
 		var wordVal = this.mmu.readWord(addr-3);
 		var offset = addr % 4;
 		
-		
-		
+
 		var result;
 		
 		switch(offset){
