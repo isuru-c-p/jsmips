@@ -1551,23 +1551,36 @@ function MipsCpu () {
 		var c = getSigned16(op&0x0000ffff);
 		DEBUG("LWL");
 		
-		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
-		var wordVal = this.mmu.readWord(address);
-		var rt_val = this.genRegisters[rt].asUInt32();
-		var bytesinBoundary = 4 - (address % 4);
-		var wordMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var rtVal = this.genRegisters[rt].asUInt32()
+		var wordVal = this.mmu.readWord(addr);
 		
-		if(this.getEndianness() == 1)
-		{
-			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+		var offset = addr % 4;
+		
+		console.log("offset: " + offset.toString(16));
+		console.log("wordVal: " + wordVal.toString(16));
+		console.log("rtVal: " + rtVal.toString(16));
+		
+		var result;
+		
+		switch(offset){
+		    case 0:
+		        result = wordVal;
+		        break;
+		    case 1:
+		        result = (wordVal << 8) | (rtVal & 0xff);
+		        break;
+		    case 2:
+		        result = (wordVal << 16) | (rtVal & 0xffff);
+		        break;
+		    case 3:
+		        result = (wordVal << 24) | (rtVal & 0xffffff);
+		        break;
 		}
 		
-		var rtMaskVal = ((0xffffffff - wordMaskVal) & 0xffffffff) >>> 0; 
 		
-		wordVal = (wordVal & wordMaskVal);
-		rt_val = (rt_val & rtMaskVal);
-				
-		this.genRegisters[rt].putUInt32(wordVal | rt_val);
+		
+		this.genRegisters[rt].putUInt32(result);
 		this.advancePC();
 	}	
 	
@@ -1577,23 +1590,28 @@ function MipsCpu () {
 		var c = getSigned16(op&0x0000ffff);
 		DEBUG("LWR");
 		
-		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
-		var wordVal = this.mmu.readWord(address);
-		var rt_val = this.genRegisters[rt].asUInt32();
-		var bytesinBoundary = (address % 4);
-		var wordMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var rtVal = this.genRegisters[rt].asUInt32()
+		var wordVal = this.mmu.readWord(addr);
+		var offset = addr % 4;
+		var result;
 		
-		if(this.getEndianness() == 0)
-		{
-			wordMaskVal = wordMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+		switch(offset){
+		    case 3:
+		        result = wordVal;
+		        break;
+		    case 2:
+		        result = (wordVal >>> 8) | (rtVal & 0xff000000);
+		        break;
+		    case 1:
+		        result = (wordVal >>> 16) | (rtVal & 0xffff0000);
+		        break;
+		    case 0:
+		        result = (wordVal >>> 24) | (rtVal & 0xffffff00);
+		        break;
 		}
 		
-		var rtMaskVal = ((0xffffffff - wordMaskVal) & 0xffffffff) >>> 0; 
-		
-		wordVal = (wordVal & wordMaskVal);
-		rt_val = (rt_val & rtMaskVal);
-				
-		this.genRegisters[rt].putUInt32(wordVal | rt_val);
+		this.genRegisters[rt].putUInt32(result);
 		this.advancePC();
 	}		
 	
