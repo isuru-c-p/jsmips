@@ -2,11 +2,16 @@
 int main();
 
 
-char* itoa(int val, int base){
+char* itoa(unsigned int val, int base){
 	
 	static char buf[32] = {0};
 	
 	int i = 30;
+	
+	if(val == 0){
+	    buf[31] = '0';
+	    return &buf[31];
+	}
 	
 	for(; val && i ; --i, val /= base)
 	
