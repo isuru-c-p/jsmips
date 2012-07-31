@@ -64,6 +64,10 @@ function RandomRegister() {
     
         return random;
     }
+
+    this.putUInt32 = function(val)
+    {
+    }
 }
 
 // CP0 Register 2 and 3, Select 0
@@ -446,6 +450,11 @@ function MipsCpu () {
     this.C0Registers[14] = new GeneralRegister(); // EPC
     this.C0Registers[15] = new processorIDRegister();
     this.C0Registers[17] = new LLAddrRegister();
+    // fillers for unimplemented coprocessor registers
+    for(i = 18; i <= 31; i++)
+    {
+        this.C0Registers[i] = new GeneralRegister();
+    }
 
     this.exceptionFlags = new Uint32Array(30);
     this.excCodes = new Uint32Array(30);
@@ -600,9 +609,13 @@ function MipsCpu () {
        {
             return this.configRegister;
        }
-       else
+       else if(select == 1)
        {
             return this.config1Register;
+       }
+       else
+       {
+            ERROR("Error, accessing Coprocessor register at index: " + index + ", select: " + select);
        }
     }
 	
@@ -1266,7 +1279,7 @@ function MipsCpu () {
         DEBUG("MFC0");
         var rt = getRt(op);
         var cd = getRd(op);
-        var select = getRs(op);
+        var select = (op & 0x7);
 
         this.genRegisters[rt].putUInt32(this.getC0Register(cd, select).asUInt32());
         this.advancePC();
@@ -1277,7 +1290,7 @@ function MipsCpu () {
         var rt = getRt(op);
         var cd = getRd(op);
 		var rt_val = this.genRegisters[rt].asUInt32();
-        var select = getRs(op);
+        var select = (op&0x7);
 
 		this.getC0Register(cd,select).putUInt32(rt_val);
         this.advancePC();
