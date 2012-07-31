@@ -1568,13 +1568,13 @@ function MipsCpu () {
 		        result = wordVal;
 		        break;
 		    case 1:
-		        result = (wordVal << 8) | (rtVal & 0xff);
+		        result = (wordVal & 0xffffff00) | (rtVal & 0xff);
 		        break;
 		    case 2:
-		        result = (wordVal << 16) | (rtVal & 0xffff);
+		        result = (wordVal & 0xffff0000) | (rtVal & 0xffff);
 		        break;
 		    case 3:
-		        result = (wordVal << 24) | (rtVal & 0xffffff);
+		        result = (wordVal & 0xff000000) | (rtVal & 0xffffff);
 		        break;
 		}
 		
@@ -1593,7 +1593,7 @@ function MipsCpu () {
 		
 		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
 		var rtVal = this.genRegisters[rt].asUInt32()
-		var wordVal = this.mmu.readWord(addr);
+		var wordVal = this.mmu.readWord(addr-3);
 		var offset = addr % 4;
 		
 		
@@ -1608,13 +1608,13 @@ function MipsCpu () {
 		        result = wordVal;
 		        break;
 		    case 2:
-		        result = (wordVal >>> 8) | (rtVal & 0xff000000);
+		        result = (wordVal & 0x00ffffff) | (rtVal & 0xff000000);
 		        break;
 		    case 1:
-		        result = (wordVal >>> 16) | (rtVal & 0xffff0000);
+		        result = (wordVal & 0xffff) | (rtVal & 0xffff0000);
 		        break;
 		    case 0:
-		        result = (wordVal >>> 24) | (rtVal & 0xffffff00);
+		        result = (wordVal & 0xff) | (rtVal & 0xffffff00);
 		        break;
 		}
 		
