@@ -72,8 +72,8 @@ void SWL_SWR() {
         p = (unsigned int *)&unaligned_test[i];
     
         asm(
-            "swr %0, 0(%1)\n"
-            "swl %0, 3(%1)\n" 
+            "swl %0, 0(%1)\n"
+            "swr %0, 3(%1)\n" 
                :
                : "r" (v) , "r" (p)
                : "memory"
