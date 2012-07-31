@@ -1557,10 +1557,6 @@ function MipsCpu () {
 		
 		var offset = addr % 4;
 		
-		console.log("offset: " + offset.toString(16));
-		console.log("wordVal: " + wordVal.toString(16));
-		console.log("rtVal: " + rtVal.toString(16));
-		
 		var result;
 		
 		switch(offset){
@@ -1589,7 +1585,6 @@ function MipsCpu () {
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
 		
-		console.log("LWR --------");
 		
 		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
 		var rtVal = this.genRegisters[rt].asUInt32()
@@ -1597,9 +1592,6 @@ function MipsCpu () {
 		var offset = addr % 4;
 		
 		
-		console.log("offset: " + offset.toString(16));
-		console.log("wordVal: " + wordVal.toString(16));
-		console.log("rtVal: " + rtVal.toString(16));
 		
 		var result;
 		

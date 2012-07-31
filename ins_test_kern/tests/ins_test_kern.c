@@ -53,6 +53,47 @@ void LWL_LWR() {
 }
 
 
+
+void SWL_SWR() {
+
+    unsigned int v = 0x00112233;
+    unsigned int * p;
+    unsigned int i;
+    int offset = 0;
+    
+    unsigned char unalignedwrite_test [16];
+    
+    for(i = 0; i < 16 ; i++){
+        unalignedwrite_test[i] = 0;
+    }
+    
+    for(i = 0 ; i <= 15; i+= 5,offset++){
+    
+        p = (unsigned int *)&unaligned_test[i];
+    
+        asm(
+            "swr %0, 0(%1)\n"
+            "swl %0, 3(%1)\n" 
+               :
+               : "r" (v) , "r" (p)
+               : "memory"
+        );
+        
+        
+        if(*p != 0x00112233){
+            print("SWL_SWR failed on offset: ");
+            print(itoa(offset,16));
+            print("\n");
+            fail();
+        }
+        
+    }
+    
+}
+
+
+
+
 void TLTU() {
     print("TLTU unimplemented\n");
 }
@@ -109,6 +150,7 @@ int
 main ()
 {
     LWL_LWR();
+    SWL_SWR();
     TLTU();
     TNE();
     TNEI();
