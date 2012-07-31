@@ -275,7 +275,7 @@ function CauseRegister()
 function processorIDRegister()
 {
 	// all fields are read only by software
-	this.R = 128; // bits 31:24
+	this.R = 0; // bits 31:24
 	this.companyID = 1; // bits 23:16
 	this.processorID = 128; // bits 15:8, (128 for 4kc)
 	this.revision = 11; // bits 7:0, latest version according to manual
@@ -315,7 +315,7 @@ function ConfigRegister()
 	
 	this.asUInt32 = function()
 	{
-		return ((this.M * Math.pow(2,31)) + (this.K23 * Math.pow(2,28)) + (this.KU * Math.pow(2,25)) + (this.ISP * Math.pow(2,24)) + (this.DSP * Math.pow(2,23)) + (this.SB * Math.pow(2,21)) + (this.MDU * Math.pow(2,20)) + (this.MM * Math.pow(2,17)) + (this.BM * Math.pow(2,16)) + (this.BE * Math.pow(2,15)) + (this.AT * Math.pow(2,13)) + (this.AR * Math.pow(2,10)) + (this.MT * Math.pow(2,7)) + this.K0);
+        return ((this.M << 31) + (this.K23 << 28) + (this.KU << 25) + (this.ISP << 24) + (this.DSP << 23) + (this.SB << 21) + (this.MDU << 20) + (this.MM << 17) + (this.BM << 16) + (this.BE << 15) + (this.AT << 13) + (this.AR << 10) + (this.MT << 7) + (this.K0)) >>> 0;
 	}
 	
 	this.putUInt32 = function(value)
@@ -1266,21 +1266,19 @@ function MipsCpu () {
         DEBUG("MFC0");
         var rt = getRt(op);
         var cd = getRd(op);
-        var select = (op&0x0000ffff);
+        var select = getRs(op);
 
         this.genRegisters[rt].putUInt32(this.getC0Register(cd, select).asUInt32());
         this.advancePC();
     }
 	
     this.MTC0 = function ( op ) {
-        DEBUG("MFC0");
+        DEBUG("MTC0");
         var rt = getRt(op);
         var cd = getRd(op);
 		var rt_val = this.genRegisters[rt].asUInt32();
-        var select = (op&0x0000ffff);
+        var select = getRs(op);
 
-        
-		
 		this.getC0Register(cd,select).putUInt32(rt_val);
         this.advancePC();
     }	
