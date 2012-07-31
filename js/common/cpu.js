@@ -771,6 +771,11 @@ function MipsCpu () {
 		DEBUG("ORI rs: " + rs.toString(16) + ", rt: " + rt.toString(16) + ", c: " + c.toString(16) + ", rs_val: " + rs_val + ", result: " + this.genRegisters[rt].asUInt32());
 	}
 
+    this.PREF = function ( op ) {
+        // loads specified line to cache, ignore in our emulator
+        this.advancePC();
+    }
+
     this.SB = function ( op ){
         var rs = getRs(op);
         var rt = getRt(op);
