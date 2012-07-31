@@ -70,6 +70,7 @@ addCommand("step", function (s,command) {
 
 isRunning = false;
 runIntervalId = 0;
+breakPoint = undefined;
 
 function breakExecution() {
     INFO("break!");
@@ -79,6 +80,19 @@ function breakExecution() {
     isRunning = false;
 
 }
+
+addCommand("bp", function (s,command) {
+    var addr = command.split(" ")[1];
+    addr = parseInt(addr,16);
+    breakPoint = addr;
+    s.write("ok bp set " + breakPoint.toString(16) + "\n");
+});
+
+addCommand("cbp", function (s,command) {
+    breakPoint = undefined;
+    s.write("ok\n");
+});
+
 
 addCommand("reset", function (s,command) {
     breakExecution();
@@ -99,10 +113,15 @@ addCommand("isrunning", function (s,command) {
 
 addCommand("run", function (s,command) {
     isRunning = true;
-    setInterval( function () {
+    runIntervalId = setInterval( function () {
         for ( var i = 0 ; i < 500 ; i++ ) {
+            if( emu.cpu.PC.asUInt32() == breakPoint ){
+                breakExecution();
+            }
             if(isRunning){
                 emu.step();
+            } else {
+                break;
             }
         }
     } , 1);
