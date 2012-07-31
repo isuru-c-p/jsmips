@@ -1631,25 +1631,32 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
-		DEBUG("SWL");
 		
-		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
-		var wordVal = this.mmu.readWord(address);
-		var rt_val = this.genRegisters[rt].asUInt32();
-		var bytesinBoundary = 4 - (address % 4);
-		var rtMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var rtVal = this.genRegisters[rt].asUInt32()
+		var wordVal = this.mmu.readWord(addr);
 		
-		if(this.getEndianness() == 1)
-		{
-			rtMaskVal = rtMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+		var offset = addr % 4;
+		
+		var result;
+		
+		switch(offset){
+		    case 0:
+		        result = rtVal;
+		        break;
+		    case 1:
+		        result = (rtVal & 0xffffff00) | (wordVal & 0xff);
+		        break;
+		    case 2:
+		        result = (rtVal & 0xffff0000) | (wordVal & 0xffff);
+		        break;
+		    case 3:
+		        result = (rtVal & 0xff000000) | (wordVal & 0xffffff);
+		        break;
 		}
 		
-		var wordMaskVal = ((0xffffffff - rtMaskVal) & 0xffffffff) >>> 0; 
 		
-		wordVal = (wordVal & wordMaskVal);
-		rt_val = (rt_val & rtMaskVal);
-				
-		this.mmu.writeWord(address, wordVal | rt_val);
+	    this.mmu.writeWord(addr, result);	
 		this.advancePC();
 	}	
 	
@@ -1657,25 +1664,32 @@ function MipsCpu () {
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
-		DEBUG("SWR");
 		
-		var address = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
-		var wordVal = this.mmu.readWord(address);
-		var rt_val = this.genRegisters[rt].asUInt32();
-		var bytesinBoundary = (address % 4);
-		var rtMaskVal = Math.pow(2,bytesinBoundary*8) - 1;
+
+		var addr = ((this.genRegisters[rs].asUInt32()+c) & 0xffffffff) >>> 0;
+		var rtVal = this.genRegisters[rt].asUInt32()
+		var wordVal = this.mmu.readWord(addr-3);
+		var offset = addr % 4;
 		
-		if(this.getEndianness() == 0)
-		{
-			rtMaskVal = rtMaskVal * Math.pow(2,(4-bytesinBoundary)*8);
+
+		var result;
+		
+		switch(offset){
+		    case 3:
+		        result = rtVal;
+		        break;
+		    case 2:
+		        result = (rtVal & 0x00ffffff) | (wordVal & 0xff000000);
+		        break;
+		    case 1:
+		        result = (rtVal & 0xffff) | (wordVal & 0xffff0000);
+		        break;
+		    case 0:
+		        result = (rtVal & 0xff) | (wordVal & 0xffffff00);
+		        break;
 		}
 		
-		var wordMaskVal = ((0xffffffff - rtMaskVal) & 0xffffffff) >>> 0; 
-		
-		wordVal = (wordVal & wordMaskVal);
-		rt_val = (rt_val & rtMaskVal);
-				
-		this.mmu.writeWord(address, wordVal | rt_val);
+        this.mmu.writeWord(addr-3,result);
 		this.advancePC();
 	}		
 	
