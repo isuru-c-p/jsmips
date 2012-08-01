@@ -1,5 +1,5 @@
-./common/OctetBuffer.js
 ./node/node_log.js
+./common/OctetBuffer.js
 ./common/autogen/doOp.autogen
 ./common/cpu.js
 ./common/mmu.js

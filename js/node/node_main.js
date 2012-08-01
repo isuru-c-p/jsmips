@@ -19,7 +19,7 @@ var dbgport = extractArgument("--dbgport","8123")
 var uartPort = extractArgument("--uartport","8124")
 
 if (extractArgument("--quiet","false") == "true"){
-    LOG_LEVEL = -1;
+    LOG_LEVEL = 0;
 }
 
 dbgport = parseInt(dbgport)
@@ -27,7 +27,7 @@ uartPort = parseInt(uartPort)
 
 INFO("debug listening on port -- " + dbgport);
 INFO("uart listening on port -- " + uartPort);
-ERROR("uart UNIMPLEMENTED");
+WARN("uart UNIMPLEMENTED");
 
 emu = 0;
 
@@ -114,7 +114,7 @@ addCommand("isrunning", function (s,command) {
 addCommand("run", function (s,command) {
     isRunning = true;
     runIntervalId = setInterval( function () {
-        for ( var i = 0 ; i < 500 ; i++ ) {
+        for ( var i = 0 ; i < 10000 ; i++ ) {
             if( emu.cpu.PC.asUInt32() == breakPoint ){
                 breakExecution();
             }
