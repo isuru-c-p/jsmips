@@ -59,7 +59,7 @@ function OctetBuffer ( size ) {
     }
     
     this.putUInt32BE = function (n,val) {
-        var i = n&3;
+        var i = n&3; //mod 4
         if(i == 0){
             this.data[n>>2] = (val&(0xffffffff)) >>> 0;
             return;

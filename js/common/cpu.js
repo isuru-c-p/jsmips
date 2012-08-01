@@ -1173,7 +1173,7 @@ function MipsCpu () {
 		this.advancePC();
 	}
 
-    this.MULTU = function ( op ) {
+    this.MULTU = function ( op ) { //karatsuba algorithm
 		var rs = getRs(op);
 		var rt = getRt(op);
 		
