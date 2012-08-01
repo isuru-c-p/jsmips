@@ -198,7 +198,20 @@ function EntryHiRegister() {
 }
 
 // CP0 Register 11, Select 0
-// Compare = GeneralRegister
+function CompareRegister(cpu) {
+    this.val = 0;
+    this.cpu = cpu;
+    
+    this.asUInt32 = function () {
+        return this.val;
+    }
+    
+    this.putUInt32 = function ( val ) {
+        this.val = (val & 0xffffffff) >>> 0;
+        // clear timer interrupt
+        this.cpu.C0Registers[13].IP1 = this.cpu.C0Registers[13].IP1 & "0x1f";
+    }
+}
 
 // CP0 Register 12, Select 0
 function StatusRegister() {
@@ -219,7 +232,7 @@ function StatusRegister() {
 	// bit 3 is reserved
 	this.ERL = 1; // Error Level, bit 2
 	this.EXL = 0; // Exception Level, bit 1
-	this.IE = 0; // Interrupt Enable, bit 0
+	this.IE = 1; // Interrupt Enable, bit 0
 	
 	this.asUInt32 = function()
 	{
@@ -444,7 +457,7 @@ function MipsCpu () {
     this.C0Registers[8] = new GeneralRegister(); // BadVAddr
     this.C0Registers[9] = new GeneralRegister(); // Count
     this.C0Registers[10] = new EntryHiRegister(); 
-    this.C0Registers[11] = new GeneralRegister(); //Compare
+    this.C0Registers[11] = new CompareRegister(this); //Compare
     this.C0Registers[12] = new StatusRegister();
     this.C0Registers[13] = new CauseRegister();
     this.C0Registers[14] = new GeneralRegister(); // EPC
@@ -480,6 +493,56 @@ function MipsCpu () {
         this.exceptionOccured = true;
         this.excCodes[exception] = exc_code;
         this.exceptionFlags[exception] = 1;
+    }
+
+    this.triggerInterrupt = function(interrupt_bit)
+    {
+        var causeReg = this.C0Registers[13];
+        var interruptVal;
+
+        if(interrupt_bit < 2)
+        {
+            interruptVal = 1 << interrupt_bit;
+            causeReg.IP0 = causeReg.IP0 | interruptVal;
+        }
+        else
+        {
+            interruptVal = 1 << (interrupt_bit - 2); 
+            causeReg.IP1 = causeReg.IP1 | interruptVal;
+        }
+       
+        return; 
+    }
+
+    this.checkInterrupts = function()
+    {
+       var c0Registers = this.C0Registers;
+       var countRegister = c0Registers[9];
+       var compareRegister = c0Registers[11];
+
+       //TODO: if in debug mode check CountDM
+       countRegister.putUInt32(countRegister.asUInt32()+1); 
+
+       if(countRegister.asUInt32() == compareRegister.asUInt32())
+       {
+            this.triggerInterrupt(7); 
+       }
+
+       var statusRegister = c0Registers[12];
+
+       if((statusRegister.IE == 1) && (statusRegister.EXL == 0) && (statusRegister.ERL == 0)) 
+       {
+            var interruptPendingBits = c0Registers[13].IP0 + (c0Registers[13].IP1 << 2);
+            var interruptMask = statusRegister.IM; 
+
+            var dispatchInterrupts = interruptMask & interruptPendingBits;
+
+            if(dispatchInterrupts > 0)
+            {
+                INFO("Triggering interrupt exception...");
+                this.triggerException(6,0);
+            }
+       }
     }
 
     this.getExceptionVectorAddress = function(exception)
@@ -633,6 +696,8 @@ function MipsCpu () {
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
 	    this.doOp(ins);
+
+        this.checkInterrupts();
 
         if(this.exceptionOccured)
         {
