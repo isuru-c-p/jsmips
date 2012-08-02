@@ -37,6 +37,26 @@ function Mmu(size) {
         tlb[index+3] = (pfn1 << 5) | entrylo1low;
     }
 
+    this.tlbProbe = function(entryhi)
+    {
+        var tlb = this.tlb;
+        var vpn2 = (entryhi >>> 13);
+        var asid = (entryhi & 0xff) >>> 0;
+
+        for(i = 0; i < 64; i+=4)
+        {
+            var tlbEntry = tlb[i+1];
+            var entry_vpn2 = (tlbEntry >>> 9) & 0x7ffff;
+            var entry_asid = (tlbEntry & 0xff);
+            if((entry_vpn2 == vpn2) && (entry_asid == asid))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     this.readTLBEntry = function(index)
     {
         var ret = new Array[4];
@@ -72,7 +92,6 @@ function Mmu(size) {
         ret[3] = pagemask;
         return ret;
     }
-
 
     this.tlbLookup = function (addr, write) {
        //console.log("TLB lookup of addr: " + addr.toString(16));
@@ -113,7 +132,7 @@ function Mmu(size) {
                      {
                         this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB invalid exception
-                        console.log("invalid tlb entry");
+                        INFO("invalid tlb entry");
                         if(write == 1)
                         {
                             this.cpu.triggerException(12,3); // excCode = TLBS 
@@ -128,7 +147,7 @@ function Mmu(size) {
 
                      if(write && !dirtyBit)
                      {
-                        ERROR("tlb modified exception");
+                        INFO("tlb modified exception");
                         this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB modified exception
                         this.cpu.triggerException(11, 1); // excCode = Mod
@@ -212,26 +231,52 @@ function Mmu(size) {
 
 	this.readHalfWord = function(address)
 	{
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg readHalfWord: " + address.toString(16));
+        //    return 0;
+        //}
 		return this.physicalMemory.getUInt16BE(this.addressTranslation(address,0));
 	}
 	
     this.writeHalfWord = function(address, val)
     {
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg writeHalfWord: " + address.toString(16) + ", val: " + val.toString(16));
+        //    return;
+        // }
         this.physicalMemory.putUInt16BE(this.addressTranslation(address,1), val);
     }	
 
     this.readByte = function(address)
     {
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg readByte: " + address.toString(16));
+        //    return 0;
+        //}
         return this.physicalMemory.getByte(this.addressTranslation(address,0));
     }
 
     this.writeByte = function(address, val)
     {
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg writeByte: " + address.toString(16) + ", val: " + val.toString(16));
+        //    return;
+        //}
+
         this.physicalMemory.putByte(this.addressTranslation(address,1), val);
     }
 	
 	this.readWord = function(address)
 	{
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg readWord: " + address.toString(16));
+        //    return 0;
+        //}
         var addr = this.addressTranslation(address,0);
 		if(this.cpu.getEndianness() == 0)
 		{
@@ -245,6 +290,11 @@ function Mmu(size) {
 	
 	this.writeWord = function(address, value)
 	{
+        //if(address >= 0xbfd00000)
+        //{
+        //    INFO("IO Reg writeWord: " + address.toString(16) + ", val: " + val.toString(16));
+        //    return;
+        //}
         //console.log("VA: " + address.toString(16));
         var addr = this.addressTranslation(address,1);
         //console.log("PA: " + addr.toString(16));
