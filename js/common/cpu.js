@@ -539,7 +539,7 @@ function MipsCpu () {
 
             if(dispatchInterrupts > 0)
             {
-                INFO("Triggering interrupt exception...");
+                //INFO("Triggering interrupt exception...");
                 this.triggerException(6,0);
             }
        }
@@ -613,12 +613,12 @@ function MipsCpu () {
 
            if(this.delaySlot)
            {
-               EPCval = (PC.asUInt32() - 4);
+               EPCval = (PC.asUInt32() - 8);
                causeReg.BD = 1;
            } 
            else
            {
-               EPCval = (PC.asUInt32());
+               EPCval = (PC.asUInt32() - 4);
                causeReg.BD = 0;
            }
 
@@ -647,6 +647,12 @@ function MipsCpu () {
         causeReg.CE = 0; // TODO: set CE to a proper value on CoProcessor unusable exception
        
         var excAddress = this.getExceptionVectorAddress(exceptionNum);
+
+        // debug printing for all exceptions except timer interrupt
+        if(exceptionNum != 6)
+        {
+            INFO("Executing exception vector @ " + excAddress.toString(16) + "(exceptionNum:" + exceptionNum + ") EPC: " + this.C0Registers[14].asUInt32().toString(16));
+        }
 
         statusRegister.EXL = 1; 
         PC.putUInt32(excAddress);
@@ -947,7 +953,7 @@ function MipsCpu () {
 		//DEBUG("SLTIU");
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var c = (op&0x0000ffff) >>> 0;
+		var c = getSigned16(op&0x0000ffff);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		
@@ -2223,6 +2229,28 @@ function MipsCpu () {
 		this.HI.putUInt32(modulo);
 		this.advancePC();
 	}
+
+    this.ERET = function ( op ) {
+        //DEBUG("ERET");
+        var c0registers = this.C0Registers;
+        var statusReg = c0registers[12];
+        var newPCVal = 0;
+
+        if(statusReg.ERL == 1)
+        {
+            WARN("Error_exception logic not implemented yet!");
+            newPCVal = c0registers[30].asUInt32(); 
+            statusReg.ERL = 0;
+        }
+        else
+        {
+            newPCVal = c0registers[14].asUInt32();
+            statusReg.EXL = 0;
+        }
+    
+        this.LLBit = 0;
+        this.PC.putUInt32(newPCVal);
+    }
 	
 	
     this.SYSCALL = function ( op ) {
@@ -2257,9 +2285,28 @@ function MipsCpu () {
 		this.advancePC();
     }	
 
+    this.TLBP = function ( op ) {
+       //DEBUG("TLBP");
+       var c0registers = this.C0Registers;
+       var entryHi = c0registers[10].asUInt32();
+       var result = this.mmu.tlbProbe(entryHi);
+       var indexReg = c0registers[0];
+
+       if(result > -1)
+       {
+          indexReg.putUInt32(result);
+       }
+       else
+       {
+          indexReg.putUInt32(indexReg.asUInt32() | 0x80000000); 
+       }
+       this.advancePC();
+    }
+
     this.TLBR = function ( op ) {
         //DEBUG("TLBR");
-
+        
+        var c0registers = this.C0Registers;
         var index = c0registers[0].asUInt32();
         var tlbParsed = this.mmu.readTLBEntry(index);
         entryLo0.putUInt32(tlbParsed[0]);
