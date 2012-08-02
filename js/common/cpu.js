@@ -953,9 +953,10 @@ function MipsCpu () {
 		//DEBUG("SLTIU");
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var c = getSigned16(op&0x0000ffff);
+		var c = getSigned16(op&0x0000ffff) >>> 0;
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
+		
 		
 		if(rs_val < c)
 		{
