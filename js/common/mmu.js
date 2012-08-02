@@ -133,6 +133,7 @@ function Mmu(size) {
                         this.cpu.entryHiReg.vpn2 = vpn2;
                         // TLB invalid exception
                         INFO("invalid tlb entry");
+                        //console.log("invalid tlb entry");
                         if(write == 1)
                         {
                             this.cpu.triggerException(12,3); // excCode = TLBS 
@@ -161,7 +162,7 @@ function Mmu(size) {
                      var pa_mask = pagemask_n_lsb + (pagemask_n << 1) + 1040384; // (0b1111111 << 13) | pagemask_n << 1 | pagemask_n_lsb 
                      var pfn = (dataEntry >>> 5) & pa_mask;
                      var pa = (pfn << 12) | (addr & offset_mask); 
-                     DEBUG("pfn: " + pfn.toString(16) + ", pa: " + pa.toString(16));
+                     //DEBUG("pfn: " + pfn.toString(16) + ", pa: " + pa.toString(16));
                      return pa;
                 }
            }
