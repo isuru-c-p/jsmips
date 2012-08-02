@@ -130,9 +130,11 @@ function Mmu(size) {
                      
                      if(!validBit)
                      {
-                        this.cpu.entryHiReg.vpn2 = vpn2;
+                        this.cpu.entryHiReg.VPN2 = vpn2;
+                        this.cpu.C0Registers[8].putUInt32(addr);
+                        this.cpu.C0Registers[4].BadVPN2 = vpn2; 
                         // TLB invalid exception
-                        INFO("invalid tlb entry");
+                        INFO("invalid tlb entry, va: " + addr.toString(16));
                         //console.log("invalid tlb entry");
                         if(write == 1)
                         {
@@ -143,16 +145,21 @@ function Mmu(size) {
                             this.cpu.triggerException(12,2); // excCode = TLBL
                         }
 
-                        return addr;
+                        throw 1337;
+                        //return addr;
                      } 
 
                      if(write && !dirtyBit)
                      {
                         INFO("tlb modified exception");
-                        this.cpu.entryHiReg.vpn2 = vpn2;
+                        this.cpu.entryHiReg.VPN2 = vpn2;
+                        this.cpu.entryHiReg.ASID = 
+                        this.cpu.C0Registers[8].putUInt32(addr);
+                        this.cpu.C0Registers[4].BadVPN2 = vpn2; 
                         // TLB modified exception
                         this.cpu.triggerException(11, 1); // excCode = Mod
-                        return addr;
+                        throw 1337;
+                        //return addr;
                      }
 
                      var pagemask_lsb = pagemask & 0x1;
@@ -169,7 +176,9 @@ function Mmu(size) {
 
        }
 
-        this.cpu.entryHiReg.vpn2 = vpn2;
+        this.cpu.entryHiReg.VPN2 = vpn2;
+        this.cpu.C0Registers[4].BadVPN2 = vpn2; 
+        this.cpu.C0Registers[8].putUInt32(addr);
 
         // TLB refill exception
         if(write == 1)
@@ -181,8 +190,8 @@ function Mmu(size) {
             this.cpu.triggerException(11,2); // excCode = TLBL
         }
 
-        DEBUG("TLB miss!");
-        return addr;
+        INFO("TLB miss! va: " + addr.toString(16));
+        throw 1337;
     }            
     
     this.addressTranslation = function(va, write) {

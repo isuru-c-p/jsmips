@@ -701,8 +701,18 @@ function MipsCpu () {
 	    //DEBUG("Executing delay slot ins at " + delayInsAddr.toString(16));
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
-	    this.doOp(ins);
 
+        try {
+	        this.doOp(ins);
+        }
+        catch(err)
+        {
+            if(err != 1337)
+            {
+                throw err;
+            }
+        }
+   
         this.checkInterrupts();
 
         if(this.exceptionOccured)
@@ -742,7 +752,16 @@ function MipsCpu () {
 	    //DEBUG("Executing instruction at " + pcVal.toString(16));
 	    var ins = this.mmu.readWord(pcVal);
 	    //DEBUG("instruction word: " + ins.toString(16));
-	    this.doOp(ins);
+        try {   
+	        this.doOp(ins);
+        }
+        catch(err)
+        {
+            if(err != 1337)
+            {
+                throw err;
+            }
+        }
 	    
 	}
 	
@@ -1517,8 +1536,8 @@ function MipsCpu () {
 	    //same as J but saves return address to stack
         //DEBUG("JAL");
         var pcval = this.PC.asUInt32();
-        var top = pcval&0xc0000000;
-        var addr = top| ((op&0x3ffffff)*4);
+        var top = (pcval&0xf0000000) >>> 0;
+        var addr = (top| ((op&0x3ffffff)*4)) >>> 0;
         this.doDelaySlot();
         //DEBUG("jumping to address " + addr.toString(16))
         this.genRegisters[31].putUInt32(pcval+8);
