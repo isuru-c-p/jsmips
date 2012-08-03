@@ -1,6 +1,6 @@
 import wx
 import DbgEngine
-
+import socket
 #this is a panel class which can be used for displaying disassembly
 
 class AssemblyViewPanel(wx.Panel):
@@ -14,7 +14,7 @@ class AssemblyViewPanel(wx.Panel):
             wx.FONTWEIGHT_NORMAL, False, 'Courier 10 Pitch')
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.timerHandler, self.timer)
-        self.timer.Start(700,False)
+        self.timer.Start(1500,False)
     def timerHandler(self,evt):
         self.Refresh()
     def OnSize(self, event):
@@ -27,17 +27,25 @@ class AssemblyViewPanel(wx.Panel):
         dc.SetBrush(wx.Brush('#000000'))
         size = 10
         dc.SetFont(self.font)
-        pc = self.dbg.readReg("PC")
+        try:
+            self.dbg.pingAndReconnect()
+            pc = self.dbg.readReg("PC")
+        except socket.error:
+            pc = 0
         count = 0
         nInstr = sy//20
         pcIdx = nInstr//2
+
         for i in range(0,sy,20):
             curInstrAddr = pc + (4*(count-pcIdx))
             dc.DrawLine(0,i,sx,i)
             if curInstrAddr < 0:
                 op = None
             else:
-                op = self.dbg.readWord(curInstrAddr)
+                try:
+                    op = self.dbg.readWord(curInstrAddr)
+                except socket.error:
+                    op = None
             if count == pcIdx:
                 dc.SetBrush(wx.Brush('#ff0000'))
                 dc.DrawRectangle(0,i+1, sx, 19)

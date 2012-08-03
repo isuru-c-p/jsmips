@@ -226,10 +226,6 @@ function Mmu(size) {
         }
     }
     
-    this.getPhysicalSize = function() {
-        return this.physicalMemory.getSize();
-    }
-
 	this.readHalfWord = function(address)
 	{
         //if(address >= 0xbfd00000)

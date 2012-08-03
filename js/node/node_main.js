@@ -45,7 +45,13 @@ function addCommand(name,fun){
     commandLUT[name] = fun;
 }
 
-
+function callNoException(newThis,func,args){
+    var oldTriggerException = emu.cpu.triggerException;
+    emu.cpu.triggerException = function () {};
+    var ret = func.apply(newThis,args);
+    emu.cpu.triggerException = oldTriggerException;
+    return ret;
+}
 
 // START debugging interface
 
@@ -137,6 +143,7 @@ addCommand("break", function (s,command) {
 });
 
 
+
 addCommand("readreg", function (s,command) {
     arg = command.split(" ")[1];
     var val = 0;
@@ -164,6 +171,7 @@ addCommand("readreg", function (s,command) {
     s.write("ok "+ val.toString(16) +'\n');
 });
 
+
 addCommand("writereg", function (s,command) {
     var arg = command.split(" ")[1];
     var val = parseInt(command.split(" ")[2],16);
@@ -176,7 +184,6 @@ addCommand("writereg", function (s,command) {
         }
     
     }
-    
     if(arg == "PC"){
         emu.cpu.PC.putUInt32(val);
     } else if (arg == "HI") {
@@ -192,13 +199,22 @@ addCommand("writereg", function (s,command) {
 
 
 addCommand("physmemsize", function (s,command) {
-    s.write("ok " + emu.mmu.getPhysicalSize().toString(16) + '\n');
+    s.write("ok " + emu.mmu.physicalMemory.getSize().toString(16) + '\n');
 })
+
+
+addCommand("readpb", function (s,command) {
+    var addr = command.split(" ")[1];
+    addr = parseInt(addr,16);
+    var val = emu.mmu.physicalMemory.getByte(addr)
+    s.write("ok "+ val.toString(16) +'\n');
+})
+
 
 addCommand("readb", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
-    var val = emu.mmu.readByte(addr);
+    var val = callNoException(emu.mmu,emu.mmu.readByte,[addr]);
     s.write("ok "+ val.toString(16) +'\n');
 });
 
@@ -206,7 +222,7 @@ addCommand("readb", function (s,command) {
 addCommand("readword", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
-    var val = emu.mmu.readWord(addr);
+    var val = callNoException(emu.mmu,emu.mmu.readWord,[addr]);
     s.write("ok "+ val.toString(16) +'\n');
 });
 

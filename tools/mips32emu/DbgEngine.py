@@ -7,10 +7,25 @@ import socket
 
 class DbgEngine(object):
     def __init__(self):
-        self.s =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.connect(('localhost', 8123))
+        try:
+            self.reconnect()
+        except socket.error:
+            pass
         self.pctofnLookup = {}
         self.disasmCache = util.Cache(50000)
+    def reconnect(self):
+        self.s =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect(('localhost', 8123))
+
+    
+    def ping(self):
+        self.readReg("PC")
+    def pingAndReconnect(self):
+        try:
+            self.ping()
+        except socket.error:
+            self.reconnect()
+    
     def disassemble(self,op):
         try:
             return self.disasmCache.get(op)
@@ -37,8 +52,12 @@ class DbgEngine(object):
             return
         else:
             raise Exception("step failed") 
-    def readByte(self,addr):
-        self.s.send("readb "+hex(addr)+'\n')
+    def readByte(self,addr,phys):
+        if phys:
+            c = 'readpb '
+        else:
+            c = 'readb '
+        self.s.send(c+hex(addr)+'\n')
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)
