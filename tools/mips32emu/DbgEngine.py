@@ -5,6 +5,9 @@ import subprocess
 import struct
 import socket
 
+class CommandException(Exception):
+    pass
+
 class DbgEngine(object):
     def __init__(self):
         try:
@@ -44,14 +47,14 @@ class DbgEngine(object):
         if res.startswith('ok'):
             return
         else:
-            raise Exception("break failed")
+            raise CommandException("break failed")
     def step(self):
         self.s.send("step\n")
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return
         else:
-            raise Exception("step failed") 
+            raise CommandException("step failed") 
     def readByte(self,addr,phys):
         if phys:
             c = 'readpb '
@@ -62,46 +65,46 @@ class DbgEngine(object):
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)
         else:
-            raise Exception("reading byte failed")
+            raise CommandException("reading byte failed")
     def readWord(self,addr):
         self.s.send("readword "+hex(addr)+'\n')
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)
         else:
-            raise Exception("reading byte failed")
+            raise CommandException("reading byte failed")
     def writeByte(self,addr,val):
         assert( 0 <= val < 256)
         self.s.send("writeb "+hex(addr)+" "+hex(val)+'\n')
         res = self.s.recv(1024)
         if not res.startswith('ok'):
-            raise Exception("writing byte failed - "+res)
+            raise CommandException("writing byte failed - "+res)
     def readReg(self,r):
         self.s.send("readreg "+r+'\n')
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)
         else:
-            raise Exception("reading register failed")
+            raise CommandException("reading register failed")
     def writeReg(self,r,val):
         assert( 0 <= val < 2**32)
         self.s.send("writereg "+r+" "+hex(val)+'\n')
         res = self.s.recv(1024)
         if not res.startswith('ok'):
-            raise Exception("writing reg failed - "+res)
+            raise CommandException("writing reg failed - "+res)
     def isRunning(self):
         self.s.send("isrunning\n")
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return res[3] == '1'
-        raise Exception("some strange error")
+        raise CommandException("some strange error")
     def getPhysMemorySize(self):
         self.s.send("physmemsize");
         res = self.s.recv(1024)
         if res.startswith('ok'):
             return int(res.split(' ')[1],16)
         else:
-            raise Exception("reading physMemSize failed")
+            raise CommandException("reading physMemSize failed")
             
     def getFunctionName(self,pc):
         distance = 0xffffffff
@@ -124,4 +127,4 @@ class DbgEngine(object):
         self.s.send("loadsrec %s %s" % (setEntry,srecString))
         res = self.s.recv(1024)
         if not res.startswith('ok'):
-            raise Exception("loading srec string failed")
+            raise CommandException("loading srec string failed")

@@ -30,7 +30,7 @@ class AssemblyViewPanel(wx.Panel):
         try:
             self.dbg.pingAndReconnect()
             pc = self.dbg.readReg("PC")
-        except socket.error:
+        except (socket.error,DbgEngine.CommandException):
             pc = 0
         count = 0
         nInstr = sy//20
@@ -44,7 +44,7 @@ class AssemblyViewPanel(wx.Panel):
             else:
                 try:
                     op = self.dbg.readWord(curInstrAddr)
-                except socket.error:
+                except (socket.error,DbgEngine.CommandException):
                     op = None
             if count == pcIdx:
                 dc.SetBrush(wx.Brush('#ff0000'))

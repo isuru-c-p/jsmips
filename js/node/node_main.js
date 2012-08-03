@@ -48,7 +48,12 @@ function addCommand(name,fun){
 function callNoException(newThis,func,args){
     var oldTriggerException = emu.cpu.triggerException;
     emu.cpu.triggerException = function () {};
-    var ret = func.apply(newThis,args);
+    try {
+        var ret = func.apply(newThis,args);
+    } catch (e){
+        emu.cpu.triggerException = oldTriggerException;
+        throw e;
+    }
     emu.cpu.triggerException = oldTriggerException;
     return ret;
 }
@@ -232,19 +237,7 @@ addCommand("writeb", function (s,command) {
     var val = command.split(" ")[2];
     addr = parseInt(addr,16);
     val = parseInt(val,16);
-    
-    
-    if( addr > 0xBFFFFFFF  || addr < 0x80000000 ){
-        s.write("ERROR: badaddr\n");
-        return;
-    }
-    
-    if(val < 0 || val > 255){
-        s.write("ERROR: byteval\n");
-        return;
-    }
-    
-    emu.mmu.writeByte(addr,val);
+    callNoException(emu.mmu,emu.mmu.writeByte,[addr,val]);
     s.write("ok\n");
 });
 
@@ -259,8 +252,7 @@ addCommand("loadsrec", function (s,command) {
     var setEntry = command.split(" ")[1];
     var srecString = command.split(" ")[2];
     setEntry = parseInt(setEntry,16);
-    
-    emu.mmu.loadSREC(srecString, setEntry);
+    callNoException(emu.mmu,emu.mmu.loadSREC,[srecString,setEntry]);
     s.write("ok\n");
 });
 
@@ -273,7 +265,15 @@ function handleCommand(data) {
     data = new String(data).split("\n")[0];
     for(var i = 0 ; i < commands.length ; i++){
         if(data.substr(0,commands[i].length) == commands[i]) {
+            try {
             commandLUT[commands[i]](this,data);
+            } catch (e){
+                if (e == 1337){
+                    this.write("ERROR: processor exception occured ")
+                } else {
+                    throw e;
+                }
+            }
             return;
         }
     }

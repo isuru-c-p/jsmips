@@ -107,9 +107,9 @@ class CpuViewPanel(wx.Panel):
             for r in registers:
                 try:
                     self.rvs[r].setValue(self.dbg.readReg(r))
-                except Exception as e:
+                except (socket.error,DbgEngine.CommandException):
                     self.rvs[r].setValue(None)
-        except socket.error:
+        except (socket.error,DbgEngine.CommandException):
             for r in registers:
                 self.rvs[r].setValue(None)
 
