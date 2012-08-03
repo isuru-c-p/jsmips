@@ -252,7 +252,11 @@ addCommand("loadsrec", function (s,command) {
     var setEntry = command.split(" ")[1];
     var srecString = command.split(" ")[2];
     setEntry = parseInt(setEntry,16);
-    callNoException(emu.mmu,emu.mmu.loadSREC,[srecString,setEntry]);
+    try {
+        callNoException(emu.mmu,emu.mmu.loadSREC,[srecString,setEntry]);
+    } catch(e){
+        s.write(e)
+    }
     s.write("ok\n");
 });
 
@@ -266,7 +270,7 @@ function handleCommand(data) {
     for(var i = 0 ; i < commands.length ; i++){
         if(data.substr(0,commands[i].length) == commands[i]) {
             try {
-            commandLUT[commands[i]](this,data);
+                commandLUT[commands[i]](this,data);
             } catch (e){
                 if (e == 1337){
                     this.write("ERROR: processor exception occured ")

@@ -14,7 +14,7 @@ class AssemblyViewPanel(wx.Panel):
             wx.FONTWEIGHT_NORMAL, False, 'Courier 10 Pitch')
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.timerHandler, self.timer)
-        self.timer.Start(1500,False)
+        self.timer.Start(700,False)
     def timerHandler(self,evt):
         self.Refresh()
     def OnSize(self, event):
