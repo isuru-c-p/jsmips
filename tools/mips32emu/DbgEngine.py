@@ -41,6 +41,13 @@ class DbgEngine(object):
             dis = [l[6:] for l in dis.split("\n") if l.startswith("   0:\t") ].pop()
             self.disasmCache.put(op,dis)
             return dis
+    def run(self):
+        self.s.send("run\n")
+        res = self.s.recv(1024)
+        if res.startswith('ok'):
+            return
+        else:
+            raise CommandException("run failed")
     def dbgBreak(self):
         self.s.send("break\n")
         res = self.s.recv(1024)
