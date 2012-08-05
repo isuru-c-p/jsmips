@@ -42,12 +42,11 @@ function IndexRegister() {
     this.Index = 0;
     
     this.asUInt32 = function() {
-        return ((this.P << 31) + this.Index); 
+        return (this.Index); 
     }
     
     this.putUInt32 = function(val) {
-        this.P = val >>> 31;
-        this.Index = val & 0xf;
+        this.Index = (val & 0xf) >>> 0;
     }
 }
 
@@ -540,7 +539,7 @@ function MipsCpu () {
             if(dispatchInterrupts > 0)
             {
                 //INFO("Triggering interrupt exception...");
-                this.triggerException(6,0);
+                //this.triggerException(6,0);
             }
        }
     }
@@ -1636,13 +1635,13 @@ function MipsCpu () {
 		this.LLBit = 1;
 		this.advancePC();
 	}	
-	
+
 	this.LW = function ( op ){
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
 		//DEBUG("LW");
-		
+
 		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
 		this.advancePC();
@@ -2248,24 +2247,26 @@ function MipsCpu () {
 
     this.ERET = function ( op ) {
         //DEBUG("ERET");
+        //INFO("ERET, PC: " + this.PC.asUInt32().toString(16));
         var c0registers = this.C0Registers;
         var statusReg = c0registers[12];
         var newPCVal = 0;
 
-        if(statusReg.ERL == 1)
+        /*if(statusReg.ERL == 1)
         {
             WARN("Error_exception logic not implemented yet!");
             newPCVal = c0registers[30].asUInt32(); 
             statusReg.ERL = 0;
         }
         else
-        {
+        {*/
             newPCVal = c0registers[14].asUInt32();
             statusReg.EXL = 0;
-        }
+        //}
     
         this.LLBit = 0;
         this.PC.putUInt32(newPCVal);
+        //INFO("new PC: " + this.PC.asUInt32().toString(16));
     }
 	
 	
@@ -2334,7 +2335,7 @@ function MipsCpu () {
 
     this.TLBWI = function ( op ) {
         //DEBUG("TLBWI");
-        c0registers = this.C0Registers;
+        var c0registers = this.C0Registers;
         var index = c0registers[0].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
@@ -2346,12 +2347,18 @@ function MipsCpu () {
 
     this.TLBWR = function ( op ) {
         //DEBUG("TLBWR");
-        var index = c0registers[0].asUInt32();
+        var c0registers = this.C0Registers;
+        var index = c0registers[1].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
         var pagemask = c0registers[5].asUInt32();
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
+        this.advancePC();
+    }
+
+    this.SYNC = function ( op ) {
+        // ignore in emulator
         this.advancePC();
     }
 }

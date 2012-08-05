@@ -31,10 +31,12 @@ function Mmu(size) {
         var vpn2 = (entryhi >>> 13);
         var asid = (entryhi & 0xff) >>> 0;
 
-        tlb[index] = pagemask;//(pagemask >>> 13) & 0xfff;
-        tlb[index+1] = ((vpn2 << 9) | (g << 8) | asid) >>> 0;
-        tlb[index+2] = (pfn0 << 5) | entrylo0low;
-        tlb[index+3] = (pfn1 << 5) | entrylo1low;
+        tlb[index*4] = pagemask;//(pagemask >>> 13) & 0xfff;
+        tlb[index*4+1] = ((vpn2 << 9) | (g << 8) | asid) >>> 0;
+        tlb[index*4+2] = (pfn0 << 5) | entrylo0low;
+        tlb[index*4+3] = (pfn1 << 5) | entrylo1low;
+
+        //console.log("Writing tlb, index: " + index + ", pagemask: " + tlb[index*4].toString(16) + ", tag: " + tlb[index*4+1].toString(16) + ", data0: " + tlb[index*4+2].toString(16) + ", data1: " + tlb[index*4+3].toString(16));
     }
 
     this.tlbProbe = function(entryhi)
@@ -98,6 +100,7 @@ function Mmu(size) {
        var asid = this.cpu.entryHiReg.ASID;
        var vpn2 = addr >>> 13;
        var tlb = this.tlb;
+       var invalidCount = 0;
 
        //console.log("Lookup ASID: " + asid + ", VPN2: " + vpn2);       
 
@@ -121,34 +124,22 @@ function Mmu(size) {
                 //console.log("VPN2Entry: " + vpn2entry.toString(16) + ", VPN2Comp: " + vpn2comp.toString(16));
                 if(vpn2entry == vpn2comp)
                 {
-                     //console.log("TLB match.");
+                     //console.log("TLB match at index: " + i);
                      var evenoddbit = 12 + pagemask_raw*2;
+                     //console.log("evenoddbit: " + evenoddbit);
                      var evenoddbitVal = (addr >>> evenoddbit) & 0x1;
+                     //console.log("evenoddbitVal: " + evenoddbitVal.toString(16));
                      var dataEntry = tlb[i+2+evenoddbitVal];
+                     //console.log("dataEntry: " + dataEntry.toString(16));
                      var validBit = dataEntry & 0x1;
                      var dirtyBit = (dataEntry >>> 1) & 0x1;
-                     
+
                      if(!validBit)
                      {
-                        this.cpu.entryHiReg.VPN2 = vpn2;
-                        this.cpu.C0Registers[8].putUInt32(addr);
-                        this.cpu.C0Registers[4].BadVPN2 = vpn2; 
-                        // TLB invalid exception
-                        INFO("invalid tlb entry, va: " + addr.toString(16));
-                        //console.log("invalid tlb entry");
-                        if(write == 1)
-                        {
-                            this.cpu.triggerException(12,3); // excCode = TLBS 
-                        }
-                        else
-                        {
-                            this.cpu.triggerException(12,2); // excCode = TLBL
-                        }
-
-                        throw 1337;
-                        //return addr;
-                     } 
-
+                        invalidCount = invalidCount + 1;
+                        continue;
+                     }
+                     
                      if(write && !dirtyBit)
                      {
                         INFO("tlb modified exception");
@@ -179,6 +170,28 @@ function Mmu(size) {
         this.cpu.entryHiReg.VPN2 = vpn2;
         this.cpu.C0Registers[4].BadVPN2 = vpn2; 
         this.cpu.C0Registers[8].putUInt32(addr);
+
+        if(invalidCount > 0)
+        {
+           this.cpu.entryHiReg.VPN2 = vpn2;
+           this.cpu.C0Registers[8].putUInt32(addr);
+           this.cpu.C0Registers[4].BadVPN2 = vpn2; 
+           // TLB invalid exception
+           //INFO("invalid tlb entry, va: " + addr.toString(16));
+           //console.log("invalid tlb entry");
+           if(write == 1)
+           {
+               this.cpu.triggerException(12,3); // excCode = TLBS 
+           }
+           else
+           {
+               this.cpu.triggerException(12,2); // excCode = TLBL
+           }
+
+           throw 1337;
+           //return addr;
+        }
+
 
         // TLB refill exception
         if(write == 1)
