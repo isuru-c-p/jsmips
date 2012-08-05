@@ -755,6 +755,7 @@ function MipsCpu () {
             else
             {
                 this.delaySlot = false;
+                this.PC.incr(4);
             }
         }
 	    
