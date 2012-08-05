@@ -2224,9 +2224,9 @@ function MipsCpu () {
 		var rt = getRt(op);
 		
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
-		var rt_val = Math.abs(getSigned(this.genRegisters[rt].asUInt32()));
+		var rt_val = getSigned(this.genRegisters[rt].asUInt32());
 		
-		var modulo = rs_val % rt_val;
+		var modulo = rs_val % Math.abs(rt_val);
 		var answer = (rs_val - modulo)/rt_val;
 		
 		this.LO.putUInt32(answer);
@@ -2239,8 +2239,8 @@ function MipsCpu () {
 		var rs = getRs(op);
 		var rt = getRt(op);
 		
-		var rs_val = Math.abs(getSigned(this.genRegisters[rs].asUInt32()));
-		var rt_val = Math.abs(getSigned(this.genRegisters[rt].asUInt32()));
+		var rs_val = this.genRegisters[rs].asUInt32();
+		var rt_val = this.genRegisters[rt].asUInt32();
 		
 		var modulo = rs_val % rt_val;
 		var answer = (rs_val - modulo)/rt_val;
