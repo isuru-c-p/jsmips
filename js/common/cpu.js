@@ -702,16 +702,7 @@ function MipsCpu () {
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
 
-        try {
-	        this.doOp(ins);
-        }
-        catch(err)
-        {
-            if(err != 1337)
-            {
-                throw err;
-            }
-        }
+	    this.doOp(ins);
    
         this.checkInterrupts();
 
@@ -760,6 +751,10 @@ function MipsCpu () {
             if(err != 1337)
             {
                 throw err;
+            }
+            else
+            {
+                this.delaySlot = false;
             }
         }
 	    
