@@ -235,10 +235,6 @@ function Mmu(size) {
         }
     }
     
-    this.getPhysicalSize = function() {
-        return this.physicalMemory.getSize();
-    }
-
 	this.readHalfWord = function(address)
 	{
         //if(address >= 0xbfd00000)
@@ -336,6 +332,7 @@ function Mmu(size) {
             if(l[0] != 'S')
             {
                 ERROR("Invalid srec record!");
+                throw "Bad srecord";
             }
 
             var count = l.substring(2,4);
@@ -383,6 +380,7 @@ function Mmu(size) {
             else
             {
                 ERROR("Unknown SREC type: " + t);
+                throw "Bad srecord";
                 return;
             }
 
@@ -391,6 +389,7 @@ function Mmu(size) {
                 if((data.length % 2) != 0)
                 {
                     ERROR("Length of data in SREC record is not valid: " + data.length);
+                    throw "Bad srecord";
                 }
                 
                 addr = parseInt(addr, 16);

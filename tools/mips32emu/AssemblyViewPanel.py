@@ -1,6 +1,6 @@
 import wx
 import DbgEngine
-
+import socket
 #this is a panel class which can be used for displaying disassembly
 
 class AssemblyViewPanel(wx.Panel):
@@ -27,17 +27,25 @@ class AssemblyViewPanel(wx.Panel):
         dc.SetBrush(wx.Brush('#000000'))
         size = 10
         dc.SetFont(self.font)
-        pc = self.dbg.readReg("PC")
+        try:
+            self.dbg.pingAndReconnect()
+            pc = self.dbg.readReg("PC")
+        except (socket.error,DbgEngine.CommandException):
+            pc = 0
         count = 0
         nInstr = sy//20
         pcIdx = nInstr//2
+
         for i in range(0,sy,20):
             curInstrAddr = pc + (4*(count-pcIdx))
             dc.DrawLine(0,i,sx,i)
             if curInstrAddr < 0:
                 op = None
             else:
-                op = self.dbg.readWord(curInstrAddr)
+                try:
+                    op = self.dbg.readWord(curInstrAddr)
+                except (socket.error,DbgEngine.CommandException):
+                    op = None
             if count == pcIdx:
                 dc.SetBrush(wx.Brush('#ff0000'))
                 dc.DrawRectangle(0,i+1, sx, 19)

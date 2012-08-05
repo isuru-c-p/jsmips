@@ -45,7 +45,18 @@ function addCommand(name,fun){
     commandLUT[name] = fun;
 }
 
-
+function callNoException(newThis,func,args){
+    var oldTriggerException = emu.cpu.triggerException;
+    emu.cpu.triggerException = function () {};
+    try {
+        var ret = func.apply(newThis,args);
+    } catch (e){
+        emu.cpu.triggerException = oldTriggerException;
+        throw e;
+    }
+    emu.cpu.triggerException = oldTriggerException;
+    return ret;
+}
 
 // START debugging interface
 
@@ -137,6 +148,7 @@ addCommand("break", function (s,command) {
 });
 
 
+
 addCommand("readreg", function (s,command) {
     arg = command.split(" ")[1];
     var val = 0;
@@ -164,6 +176,7 @@ addCommand("readreg", function (s,command) {
     s.write("ok "+ val.toString(16) +'\n');
 });
 
+
 addCommand("writereg", function (s,command) {
     var arg = command.split(" ")[1];
     var val = parseInt(command.split(" ")[2],16);
@@ -176,7 +189,6 @@ addCommand("writereg", function (s,command) {
         }
     
     }
-    
     if(arg == "PC"){
         emu.cpu.PC.putUInt32(val);
     } else if (arg == "HI") {
@@ -192,13 +204,22 @@ addCommand("writereg", function (s,command) {
 
 
 addCommand("physmemsize", function (s,command) {
-    s.write("ok " + emu.mmu.getPhysicalSize().toString(16) + '\n');
+    s.write("ok " + emu.mmu.physicalMemory.getSize().toString(16) + '\n');
 })
+
+
+addCommand("readpb", function (s,command) {
+    var addr = command.split(" ")[1];
+    addr = parseInt(addr,16);
+    var val = emu.mmu.physicalMemory.getByte(addr)
+    s.write("ok "+ val.toString(16) +'\n');
+})
+
 
 addCommand("readb", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
-    var val = emu.mmu.readByte(addr);
+    var val = callNoException(emu.mmu,emu.mmu.readByte,[addr]);
     s.write("ok "+ val.toString(16) +'\n');
 });
 
@@ -206,7 +227,7 @@ addCommand("readb", function (s,command) {
 addCommand("readword", function (s,command) {
     var addr = command.split(" ")[1];
     addr = parseInt(addr,16);
-    var val = emu.mmu.readWord(addr);
+    var val = callNoException(emu.mmu,emu.mmu.readWord,[addr]);
     s.write("ok "+ val.toString(16) +'\n');
 });
 
@@ -216,19 +237,7 @@ addCommand("writeb", function (s,command) {
     var val = command.split(" ")[2];
     addr = parseInt(addr,16);
     val = parseInt(val,16);
-    
-    
-    if( addr > 0xBFFFFFFF  || addr < 0x80000000 ){
-        s.write("ERROR: badaddr\n");
-        return;
-    }
-    
-    if(val < 0 || val > 255){
-        s.write("ERROR: byteval\n");
-        return;
-    }
-    
-    emu.mmu.writeByte(addr,val);
+    callNoException(emu.mmu,emu.mmu.writeByte,[addr,val]);
     s.write("ok\n");
 });
 
@@ -243,8 +252,11 @@ addCommand("loadsrec", function (s,command) {
     var setEntry = command.split(" ")[1];
     var srecString = command.split(" ")[2];
     setEntry = parseInt(setEntry,16);
-    
-    emu.mmu.loadSREC(srecString, setEntry);
+    try {
+        callNoException(emu.mmu,emu.mmu.loadSREC,[srecString,setEntry]);
+    } catch(e){
+        s.write(e)
+    }
     s.write("ok\n");
 });
 
@@ -257,7 +269,15 @@ function handleCommand(data) {
     data = new String(data).split("\n")[0];
     for(var i = 0 ; i < commands.length ; i++){
         if(data.substr(0,commands[i].length) == commands[i]) {
-            commandLUT[commands[i]](this,data);
+            try {
+                commandLUT[commands[i]](this,data);
+            } catch (e){
+                if (e == 1337){
+                    this.write("ERROR: processor exception occured ")
+                } else {
+                    throw e;
+                }
+            }
             return;
         }
     }
