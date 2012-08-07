@@ -14,13 +14,6 @@ function Emulator() {
     this.step = function () {
         DEBUG("emulator tick");
         this.cpu.step();
-
-        this.cpu.checkInterrupts();
-        if(this.cpu.exceptionOccured)
-        {
-            this.cpu.processException();
-        }
-
     }
     
     
