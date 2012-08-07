@@ -53,10 +53,11 @@ function IndexRegister() {
 // CP0 Register 1, Select 0
 function RandomRegister() {
     this._upperBound = 15;
+    this.cpu = undefined;
     
     this.asUInt32 = function()
     {
-        var wire = this.Wire.asUInt32();
+        var wire = this.cpu.C0Registers[6].asUInt32();
         var randRange = (15 - wire);
         
         var random = wire + Math.floor(Math.random() * randRange);    
@@ -448,6 +449,7 @@ function MipsCpu () {
     this.C0Registers = new Array(32);
     this.C0Registers[0] = new IndexRegister();
     this.C0Registers[1] = new RandomRegister();
+    this.C0Registers[1].cpu = this;
     this.C0Registers[2] = new EntryLoRegister();
     this.C0Registers[3] = new EntryLoRegister();
     this.C0Registers[4] = new ContextRegister();
@@ -612,12 +614,12 @@ function MipsCpu () {
 
            if(this.delaySlot)
            {
-               EPCval = (PC.asUInt32() - 8);
+               EPCval = (PC.asUInt32() - 4);
                causeReg.BD = 1;
            } 
            else
            {
-               EPCval = (PC.asUInt32() - 4);
+               EPCval = (PC.asUInt32());
                causeReg.BD = 0;
            }
 
@@ -650,7 +652,7 @@ function MipsCpu () {
         // debug printing for all exceptions except timer interrupt
         if(exceptionNum != 6)
         {
-            INFO("Executing exception vector @ " + excAddress.toString(16) + "(exceptionNum:" + exceptionNum + ") EPC: " + this.C0Registers[14].asUInt32().toString(16));
+            INFO("Executing exception vector @ " + excAddress.toString(16) + "(exceptionNum:" + exceptionNum + ") EPC: " + this.C0Registers[14].asUInt32().toString(16) + ", v0: " + this.genRegisters[2].asUInt32().toString(16));
         }
 
         statusRegister.EXL = 1; 
@@ -701,13 +703,20 @@ function MipsCpu () {
 	    var ins = this.mmu.readWord(delayInsAddr);
 	    this.delaySlot = true;
 
+        this.checkInterrupts();
+        if(this.exceptionOccured)
+        {
+            throw 1337;
+        }
+
 	    this.doOp(ins);
    
-        this.checkInterrupts();
+        //this.checkInterrupts();
 
         if(this.exceptionOccured)
         {
-            this.processException();
+            throw 1337;
+            //this.processException();
         }
 
 	    this.delaySlot = false;
@@ -739,6 +748,18 @@ function MipsCpu () {
 	this.step = function () {
 	
 	    var pcVal = this.PC.asUInt32();
+
+        this.checkInterrupts();
+        if(this.exceptionOccured)
+        {
+            //console.log("Exception process PC: " + pcVal.toString(16));
+            this.processException();
+            this.delaySlot = false;
+            return;
+        }
+
+        this.delaySlot = false;
+
 	    //DEBUG("Executing instruction at " + pcVal.toString(16));
 	    var ins = this.mmu.readWord(pcVal);
 	    //DEBUG("instruction word: " + ins.toString(16));
@@ -753,8 +774,7 @@ function MipsCpu () {
             }
             else
             {
-                this.delaySlot = false;
-                this.PC.incr(4);
+                //this.PC.incr(4);
             }
         }
 	    
@@ -807,6 +827,8 @@ function MipsCpu () {
 	    var rs = getRs(op);
 	    var rt = getRt(op);
 	    //DEBUG("ADDIU reg "+rs + " with imm " + imm + " and save in reg " + rt );
+       
+        var rsVal = this.genRegisters[rs].asUInt32();
 	    var res = this.genRegisters[rs].asUInt32() + imm;
 	    res = res % 4294967296; // handle overflow
 	    this.genRegisters[rt].putUInt32(res);
@@ -1220,10 +1242,13 @@ function MipsCpu () {
 		var rs = getRs(op);
 		var rt = getRt(op);
 		
-		var number1 = this.genRegisters[rs].asUInt32();
-		var number2 = this.genRegisters[rt].asUInt32();
+		var number1Signed = getSigned(this.genRegisters[rs].asUInt32());
+		var number2Signed = getSigned(this.genRegisters[rt].asUInt32());
+
+        var number1 = Math.abs(number1Signed);
+        var number2 = Math.abs(number2Signed);
 		
-		var sign = (number1/number1) * (number2/number2);
+		var sign = (number1Signed/number1) * (number2Signed/number2);
 				
 		var number1Hi = number1 >>> 16;
 		var number1Lo = (number1 & 0xffff);
@@ -1252,7 +1277,7 @@ function MipsCpu () {
 		
 			HI_val = (~(HI_val) + carry) & 0xffffffff;
 			this.HI.putUInt32(HI_val);
-			this.L0.putUInt32(LO_val);
+			this.LO.putUInt32(LO_val);
 		}
 		//console.log("A: " + number1 + ", B:" + number2);
 		//console.log("Result: 0x"+result.toString(16)+", HI: 0x"+this.HI.asUInt32().toString(16)+", LO: 0x"+this.LO.asUInt32().toString(16));
@@ -1636,14 +1661,20 @@ function MipsCpu () {
 		this.advancePC();
 	}	
 
+
 	this.LW = function ( op ){
 		var rt = getRt(op);
 		var rs = getRs(op);
 		var c = getSigned16(op&0x0000ffff);
 		//DEBUG("LW");
 
-		this.genRegisters[rt].putUInt32(this.genRegisters[rs].asUInt32()+c)
-		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
+        var rsVal = this.genRegisters[rs].asUInt32();
+        var newRtValAddr = ((rsVal+c) & 0xffffffff) >>> 0;
+
+        var newRtVal = this.mmu.readWord(newRtValAddr);
+
+		this.genRegisters[rt].putUInt32(newRtVal);
+
 		this.advancePC();
 	}
 	
@@ -2247,7 +2278,6 @@ function MipsCpu () {
 
     this.ERET = function ( op ) {
         //DEBUG("ERET");
-        //INFO("ERET, PC: " + this.PC.asUInt32().toString(16));
         var c0registers = this.C0Registers;
         var statusReg = c0registers[12];
         var newPCVal = 0;
@@ -2265,6 +2295,7 @@ function MipsCpu () {
         //}
     
         this.LLBit = 0;
+        //INFO("ERET, PC: " + this.PC.asUInt32().toString(16) + ", newPC: " + newPCVal.toString(16) + ", v0: " + this.genRegisters[2].asUInt32().toString(16));
         this.PC.putUInt32(newPCVal);
         //INFO("new PC: " + this.PC.asUInt32().toString(16));
     }
@@ -2287,6 +2318,10 @@ function MipsCpu () {
             }
 
             terminal(stringToPrint);
+        }
+        else
+        {
+            this.triggerException(15,8); 
         }
         
         if(v0_val == 5)
