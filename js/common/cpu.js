@@ -488,6 +488,7 @@ function MipsCpu () {
     this.exceptionOccured = false;
     
     this.LLBit = 0;
+    this.clockCount = 0;
 
     this.triggerException = function(exception, exc_code)
     {
@@ -522,11 +523,17 @@ function MipsCpu () {
        var compareRegister = c0Registers[11];
 
        //TODO: if in debug mode check CountDM
-       countRegister.putUInt32(countRegister.asUInt32()+1); 
+       this.clockCount = this.clockCount + 1;
 
-       if(countRegister.asUInt32() == compareRegister.asUInt32())
+       if(this.clockCount == 2)
        {
-            this.triggerInterrupt(7); 
+            countRegister.putUInt32(countRegister.asUInt32()+1); 
+
+            if(countRegister.asUInt32() == compareRegister.asUInt32())
+            {
+                this.triggerInterrupt(7); 
+            }
+            this.clockCount = 0;
        }
 
        var statusRegister = c0Registers[12];
@@ -541,7 +548,7 @@ function MipsCpu () {
             if(dispatchInterrupts > 0)
             {
                 //INFO("Triggering interrupt exception...");
-                //this.triggerException(6,0);
+                this.triggerException(6,0);
             }
        }
     }
@@ -1114,6 +1121,7 @@ function MipsCpu () {
         if(rs_val != rt_val)
         {
             this.triggerException(20, 13);
+            return;
         }
 
 	    this.advancePC();
@@ -1122,7 +1130,7 @@ function MipsCpu () {
     this.BREAK = function (op) {
         //DEBUG("BREAK");
         this.triggerException(16, 9);
-        this.advancePC();
+        //this.advancePC();
     }
 	
 	this.SRA = function ( op ){
@@ -2321,6 +2329,7 @@ function MipsCpu () {
         }
         else
         {
+            console.log("syscall...");
             this.triggerException(15,8); 
         }
         
