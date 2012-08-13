@@ -657,7 +657,7 @@ function MipsCpu () {
         var excAddress = this.getExceptionVectorAddress(exceptionNum);
 
         // debug printing for all exceptions except timer interrupt
-        if(exceptionNum != 6)
+        if((exceptionNum != 6) && (exceptionNum != 15))
         {
             INFO("Executing exception vector @ " + excAddress.toString(16) + "(exceptionNum:" + exceptionNum + ") EPC: " + this.C0Registers[14].asUInt32().toString(16) + ", v0: " + this.genRegisters[2].asUInt32().toString(16));
         }
@@ -767,8 +767,8 @@ function MipsCpu () {
 
         this.delaySlot = false;
 
-	    //DEBUG("Executing instruction at " + pcVal.toString(16));
 	    var ins = this.mmu.readWord(pcVal);
+	    //DEBUG("Executing instruction at " + pcVal.toString(16));
 	    //DEBUG("instruction word: " + ins.toString(16));
         try {   
 	        this.doOp(ins);
@@ -1131,6 +1131,12 @@ function MipsCpu () {
         //DEBUG("BREAK");
         this.triggerException(16, 9);
         //this.advancePC();
+    }
+
+    this.WAIT = function (op)
+    {
+        // wait for interrupt 
+        return;//
     }
 	
 	this.SRA = function ( op ){
@@ -1577,11 +1583,12 @@ function MipsCpu () {
         //DEBUG("JALR");
         var pcval = this.PC.asUInt32();
 		var rs = getRs(op);
+        var rd = getRd(op);
 		var addr = this.genRegisters[rs].asUInt32();
 		
         this.doDelaySlot();
         //DEBUG("jumping to address " + addr.toString(16))
-        this.genRegisters[31].putUInt32(pcval+8);
+        this.genRegisters[rd].putUInt32(pcval+8);
         this.PC.putUInt32(addr);
 	}	
 	
@@ -2329,11 +2336,11 @@ function MipsCpu () {
         }
         else
         {
-            console.log("syscall...");
+            //console.log("syscall...");
             this.triggerException(15,8); 
         }
         
-        if(v0_val == 5)
+        /*if(v0_val == 5)
         {
             process.exit(0);
         }
@@ -2341,7 +2348,7 @@ function MipsCpu () {
         if(v0_val == 6)
         {
             process.exit(1);
-        }
+        }*/
 
 		this.advancePC();
     }	
