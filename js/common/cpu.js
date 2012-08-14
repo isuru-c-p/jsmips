@@ -2384,6 +2384,11 @@ function MipsCpu () {
         var c0registers = this.C0Registers;
         var index = c0registers[0].asUInt32();
         var tlbParsed = this.mmu.readTLBEntry(index);
+        var entryLo0 = c0registers[2];
+        var entryLo1 = c0registers[3];
+        var pagemask = c0registers[5];
+        var entryHi = c0registers[10];
+
         entryLo0.putUInt32(tlbParsed[0]);
         entryLo1.putUInt32(tlbParsed[1]);
         entryHi.putUInt32(tlbParsed[2]);
