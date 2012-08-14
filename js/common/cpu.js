@@ -544,10 +544,9 @@ function MipsCpu () {
             var interruptMask = statusRegister.IM; 
 
             var dispatchInterrupts = interruptMask & interruptPendingBits;
-
+            
             if(dispatchInterrupts > 0)
             {
-                //INFO("Triggering interrupt exception...");
                 this.triggerException(6,0);
             }
        }
@@ -786,6 +785,14 @@ function MipsCpu () {
         }
 	    
 	}
+	
+	this.a = function( op ){
+        ERROR("unknown instruction! " + op.toString(16) + " at PC: "+
+                                                this.PC.asUInt32().toString(16));
+        throw "mission abort!";
+	}
+	
+	this.b = this.a
 	
 	this.ADD = function ( op ) {
 		//DEBUG("ADD");
