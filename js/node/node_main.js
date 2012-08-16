@@ -147,6 +147,47 @@ addCommand("break", function (s,command) {
 
 });
 
+addCommand("readtlb", function (s,command) {
+	var tlb = emu.mmu.tlb;	
+	s.write("TLB entries: \n");	
+
+	for(var i = 0; i < 64; i += 4)
+	{
+		s.write("#" + (i/4).toString() + "\n");
+		var tlbEntry0 = tlb[i];
+		var tlbEntry1 = tlb[i+1];
+		var pagemask = tlbEntry0;
+		var VPN2 = (tlbEntry1 >>> 9);
+		var G = (tlbEntry1 >>> 8) & 0x1;
+		var ASID = (tlbEntry1 & 0xff);
+
+
+		s.write("PageMask[24:13] = " + pagemask.toString(16) + "\n");
+		s.write("VPN2[31:13] = " + VPN2.toString(16) + "\n"); 
+		s.write("G = " + G.toString(16) + "\n"); 
+		s.write("ASID[7:0] = " + ASID.toString(16) + "\n"); 
+
+		var tlbEntry2 = tlb[i+2];
+		var tlbEntry3 = tlb[i+3];
+		var PFN0 = (tlbEntry2 >>> 5);
+		var C0 = (tlbEntry2 >>> 2) & 0x7;
+		var D0 = (tlbEntry2 >>> 1) & 0x1;
+		var V0 = (tlbEntry2 & 0x1) >>> 0;
+
+		var PFN1 = (tlbEntry3 >>> 5);
+		var C1 = (tlbEntry3 >>> 2) & 0x7;
+		var D1 = (tlbEntry3 >>> 1) & 0x1;
+		var V1 = (tlbEntry3 & 0x1) >>> 0;
+		
+		s.write("Entry #1: \n");
+		s.write("PFN0: " + PFN0.toString(16) + ", C0: " + C0.toString(16) + ", D0: " + D0.toString() + ", V0: " + V0.toString() + "\n");
+		s.write("Entry #2: \n");
+		s.write("PFN1: " + PFN1.toString(16) + ", C1: " + C1.toString(16) + ", D1: " + D1.toString() + ", V1: " + V1.toString() + "\n");
+		s.write("\n");
+		
+	}	
+});
+
 
 
 addCommand("readreg", function (s,command) {
@@ -255,9 +296,30 @@ addCommand("loadsrec", function (s,command) {
     try {
         callNoException(emu.mmu,emu.mmu.loadSREC,[srecString,setEntry]);
     } catch(e){
-        s.write(e)
+        s.write(e);
     }
     s.write("ok\n");
+});
+
+addCommand("filesrecload", function (s,command) {
+    var setEntry = command.split(" ")[1];
+    var srecFilePath = command.split(" ")[2];
+
+    setEntry = parseInt(setEntry,16);
+    fs.readFile(srecFilePath, 'ascii', function(err,data) {
+        if(err) {
+            s.write(err);
+        }
+        else
+        {
+            try {
+                callNoException(emu.mmu, emu.mmu.loadSREC, [data,setEntry]);
+                s.write("ok");
+            } catch(e) {
+                s.write(e);
+            }
+        }
+    });
 });
 
 // END debugging interface
