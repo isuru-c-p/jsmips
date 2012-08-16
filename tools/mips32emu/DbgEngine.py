@@ -135,3 +135,9 @@ class DbgEngine(object):
         res = self.s.recv(1024)
         if not res.startswith('ok'):
             raise CommandException("loading srec string failed")
+
+    def filesrecload(self,srecFilePath,setEntry):
+        self.s.send("filesrecload %s %s" % (setEntry,srecFilePath))
+        res = self.s.recv(1024)
+        if not res.startswith('ok'):
+            raise CommandException("loading srec file failed")
