@@ -2339,7 +2339,7 @@ function MipsCpu () {
                 characterInt = this.mmu.readByte(a0_val+1);
             }
 
-            terminal(stringToPrint);
+            this.emu.serialLine.writeToConsole(stringToPrint);
         }
         else
         {

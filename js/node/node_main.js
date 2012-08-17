@@ -33,6 +33,7 @@ emu = 0;
 
 function reset() {
     emu = new Emulator()
+    emu.serialLine = new node_serial();
 }
 
 reset();
@@ -363,5 +364,28 @@ var dbgserver = net.createServer(function(c) { //'connection' listener
 });
 
 dbgserver.listen(8123, function() { //'listening' listener
+    INFO('server bound');
+});
+
+
+
+var serialServer = net.createServer(function(c) { //'connection' listener
+
+  c.on('end', function() {
+    INFO('serialServer disconnected');
+    removeSerialSocket(this);
+  });
+  
+  c.on('connect', function() {
+    INFO('serialServer connected');
+    registerSerialSocket(this);
+    
+  });
+
+  c.on("data", function(d){} );
+
+});
+
+serialServer.listen(8124, function() { //'listening' listener
     INFO('server bound');
 });
