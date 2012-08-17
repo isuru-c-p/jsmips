@@ -1,5 +1,6 @@
 import sys
 import mips32emu.DbgEngine
+import os
 
 
 if __name__ == "__main__":
@@ -11,8 +12,9 @@ if __name__ == "__main__":
     else:
         setEntry = 0
 
-    for line in open(sys.argv[1]):
-        dbg.loadSrec(line,setEntry) 
+    #for line in open(sys.argv[1]):
+    #    dbg.loadSrec(line,setEntry) 
+    dbg.filesrecload(os.path.abspath(sys.argv[1]),setEntry)
         
 
 

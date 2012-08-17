@@ -67,8 +67,9 @@ class AssemblyView(wx.Frame):
             wx.MessageBox('error while loading srec file! - ' + str(e), 'Error', wx.OK | wx.ICON_ERROR)
     def loadSrec(self,fname):
         self.av.dbg.dbgBreak()
-        for line in open(fname):
-            self.av.dbg.loadSrec(line,1)
+        self.av.dbg.filesrecload(fname,1)
+        #for line in open(fname):
+        #    self.av.dbg.loadSrec(line,1)
 
 app = wx.App()
 frame = AssemblyView()
