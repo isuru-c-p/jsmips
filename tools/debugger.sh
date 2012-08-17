@@ -14,5 +14,9 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 pushd $DIR
 python AssemblyView.py &
 python CPUView.py &
+while true; do sleep 1 ; nc localhost 8124 ; done
 wait
 popd
+
+
+
