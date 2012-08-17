@@ -20,6 +20,8 @@ function Mmu(size) {
         this.tlb[i] = 0;
     }
 
+    this.uart = new UART_16550();
+
     this.writeTLBEntry = function(index, entrylo0, entrylo1, entryhi, pagemask)
     {
         var tlb = this.tlb;
@@ -275,7 +277,14 @@ function Mmu(size) {
         //    INFO("IO Reg readByte: " + address.toString(16));
         //    return 0;
         //}
-        return this.physicalMemory.getByte(this.addressTranslation(address,0));
+        if((address >= this.uart.baseAddr) && (address <= this.uart.endAddr))
+        {
+            return this.uart.readByte(address);
+        }
+        else
+        {
+            return this.physicalMemory.getByte(this.addressTranslation(address,0));
+        }
     }
 
     this.writeByte = function(address, val)
@@ -285,8 +294,14 @@ function Mmu(size) {
         //    INFO("IO Reg writeByte: " + address.toString(16) + ", val: " + val.toString(16));
         //    return;
         //}
-
-        this.physicalMemory.putByte(this.addressTranslation(address,1), val);
+        if((address >= this.uart.baseAddr) && (address <= this.uart.endAddr))
+        {
+            this.uart.writeByte(address,val);
+        }
+        else
+        {
+            this.physicalMemory.putByte(this.addressTranslation(address,1), val);
+        }
     }
 	
 	this.readWord = function(address)
@@ -296,6 +311,12 @@ function Mmu(size) {
         //    INFO("IO Reg readWord: " + address.toString(16));
         //    return 0;
         //}
+        if((address >= this.uart.baseAddr) && (address <= this.uart.endAddr))
+        {
+            return this.uart.readWord(address);
+        }
+
+
         var addr = this.addressTranslation(address,0);
 		if(this.cpu.getEndianness() == 0)
 		{
@@ -315,6 +336,12 @@ function Mmu(size) {
         //    return;
         //}
         //console.log("VA: " + address.toString(16));
+        if((address >= this.uart.baseAddr) && (address <= this.uart.endAddr))
+        {
+            this.uart.writeWord(address,val);
+            return;
+        }
+
         var addr = this.addressTranslation(address,1);
         //console.log("PA: " + addr.toString(16));
 		if(this.cpu.getEndianness() == 0)

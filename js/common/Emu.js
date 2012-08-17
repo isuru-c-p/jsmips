@@ -8,6 +8,7 @@ function Emulator() {
     this.cpu = new MipsCpu();
     this.cpu.emu = this;
     this.mmu.emu = this;
+    this.mmu.uart.cpu = this.cpu;
     
     this.serialLine = new null_serial()
     

@@ -2,6 +2,7 @@
 ./common/OctetBuffer.js
 ./common/autogen/doOp.autogen
 ./common/cpu.js
+./common/uart.js
 ./common/mmu.js
 ./common/null_serial.js
 ./common/Emu.js
