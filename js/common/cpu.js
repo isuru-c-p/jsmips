@@ -53,7 +53,6 @@ function IndexRegister() {
 // CP0 Register 1, Select 0
 function RandomRegister() {
     this._upperBound = 15;
-    this.cpu = undefined;
     
     this.asUInt32 = function()
     {
@@ -106,7 +105,7 @@ function ContextRegister() {
     this.putUInt32 = function(val)
     {
         this.BadVPN2 = (val >>> 4) & 0x7ffff;
-        this.PTEBase = (val >>> 23) & 0xff;
+        this.PTEBase = (val >>> 23) & 0x1ff;
     }
 }
 
@@ -122,7 +121,7 @@ function PageMaskRegister() {
     this.asUInt32 = function()
     {
         var mask = Math.pow(2,this.Mask*2)-1;
-        return (mask << 13);
+        return ((mask << 13) >>> 0);
     }
     
     this.putUInt32 = function(val)
@@ -188,12 +187,12 @@ function EntryHiRegister() {
     this.ASID = 0;
     
     this.asUInt32 = function() {
-        return ((this.VPN2 << 13) + this.ASID);
+        return (((this.VPN2 << 13) + this.ASID) >>> 0);
     }
     
     this.putUInt32 = function(val) {
         this.ASID = val & 0xff;
-        this.VPN2 = (val >>> 13) & 0xfff;
+        this.VPN2 = (val >>> 13) & 0x7ffff;
     }
 }
 
@@ -766,10 +765,10 @@ function MipsCpu () {
 
         this.delaySlot = false;
 
-	    var ins = this.mmu.readWord(pcVal);
 	    //DEBUG("Executing instruction at " + pcVal.toString(16));
 	    //DEBUG("instruction word: " + ins.toString(16));
         try {   
+	        var ins = this.mmu.readWord(pcVal);
 	        this.doOp(ins);
         }
         catch(err)
@@ -785,11 +784,18 @@ function MipsCpu () {
         }
 	    
 	}
+
+    this.unknownPrinted = 0;
 	
 	this.a = function( op ){
-        ERROR("unknown instruction! " + op.toString(16) + " at PC: "+
+        //if(!this.unknownPrinted)
+        //{
+        //    this.unknownPrinted = 1;
+            ERROR("unknown instruction! " + op.toString(16) + " at PC: "+
                                                 this.PC.asUInt32().toString(16));
-        throw "mission abort!";
+        //}
+        this.advancePC();
+        //throw "mission abort!";
 	}
 	
 	this.b = this.a
@@ -1678,7 +1684,7 @@ function MipsCpu () {
 		
 		this.genRegisters[rt].putUInt32(addr)
 		this.genRegisters[rt].putUInt32(this.mmu.readWord(this.genRegisters[rt].asUInt32()));
-		this.llAddrRegister.putUInt32(addr);
+		this.llAddrRegister.PAddr = (addr >>> 4);
 		this.LLBit = 1;
 		this.advancePC();
 	}	
@@ -2325,7 +2331,7 @@ function MipsCpu () {
 	
     this.SYSCALL = function ( op ) {
         //DEBUG("SYSCALL");
-        var v0_val = this.genRegisters[2].asUInt32();
+        /*var v0_val = this.genRegisters[2].asUInt32();
         var a0_val = this.genRegisters[4].asUInt32();
 
         if(v0_val == 4)
@@ -2342,12 +2348,12 @@ function MipsCpu () {
             this.emu.serialLine.writeToConsole(stringToPrint);
         }
         else
-        {
+        {*/
             //console.log("syscall...");
             this.triggerException(15,8); 
-        }
+        /*}
         
-        /*if(v0_val == 5)
+        if(v0_val == 5)
         {
             process.exit(0);
         }
@@ -2357,7 +2363,7 @@ function MipsCpu () {
             process.exit(1);
         }*/
 
-		this.advancePC();
+		//this.advancePC();
     }	
 
     this.TLBP = function ( op ) {
@@ -2398,24 +2404,28 @@ function MipsCpu () {
 
     this.TLBWI = function ( op ) {
         //DEBUG("TLBWI");
+        //console.log("TLBWI");
         var c0registers = this.C0Registers;
         var index = c0registers[0].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
         var pagemask = c0registers[5].rawUInt32();
+        //console.log("index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
         this.advancePC();
     }
 
     this.TLBWR = function ( op ) {
         //DEBUG("TLBWR");
+        //console.log("TLBWR");
         var c0registers = this.C0Registers;
         var index = c0registers[1].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
         var pagemask = c0registers[5].asUInt32();
+        //console.log("wiredReg: " + c0registers[6].asUInt32() + ", index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
         this.advancePC();
     }

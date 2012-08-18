@@ -146,7 +146,7 @@ function Mmu(size) {
                      {
                         INFO("tlb modified exception");
                         this.cpu.entryHiReg.VPN2 = vpn2;
-                        this.cpu.entryHiReg.ASID = 
+                        //this.cpu.entryHiReg.ASID = 
                         this.cpu.C0Registers[8].putUInt32(addr);
                         this.cpu.C0Registers[4].BadVPN2 = vpn2; 
                         // TLB modified exception
@@ -179,7 +179,7 @@ function Mmu(size) {
            this.cpu.C0Registers[8].putUInt32(addr);
            this.cpu.C0Registers[4].BadVPN2 = vpn2; 
            // TLB invalid exception
-           //INFO("invalid tlb entry, va: " + addr.toString(16));
+           INFO("invalid tlb entry, va: " + addr.toString(16));
            //console.log("invalid tlb entry");
            if(write == 1)
            {

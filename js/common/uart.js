@@ -74,6 +74,7 @@ function UART_16550()
         }
         else
         {
+            //console.log("UART access read: " + addr.toString(16));
             var reg = this.getReg(addr,0);
             if(reg == undefined)
             {
@@ -95,6 +96,7 @@ function UART_16550()
         }
         else
         {
+            //console.log("UART access write: " + addr.toString(16));
             var reg = this.getReg(addr,1);
             if(reg != undefined)
             {
