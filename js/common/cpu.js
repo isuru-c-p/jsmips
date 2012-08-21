@@ -749,10 +749,18 @@ function MipsCpu () {
 
 		return bigEndian;
 	}
+
+    //this.lastPC = -1;
 	
 	this.step = function () {
 	
 	    var pcVal = this.PC.asUInt32();
+        /*if((pcVal % 4) != 0)
+        {
+            console.log("ERROR, unaligned PC: " + pcVal.toString(16) + ", RA: " + this.genRegisters[31].asUInt32().toString(16) + ", lastPC: " + lastPC.toString(16));
+        }
+
+        lastPC = pcVal;*/
 
         this.checkInterrupts();
         if(this.exceptionOccured)
@@ -1855,7 +1863,7 @@ function MipsCpu () {
 	}		
 	
 	this.B = function ( op ) {
-		var offset = getSigned16(op & 0x0000ffff);
+		var offset = getSigned16((op & 0x0000ffff) * 4);
 		this.doDelaySlot();
 		//DEBUG("B");
 		this.PC.incr(offset);
@@ -1863,7 +1871,7 @@ function MipsCpu () {
 	}
 	
 	this.BAL = function ( op ){
-		var offset = getSigned16(op & 0x0000ffff);
+		var offset = getSigned16((op & 0x0000ffff) * 4);
 		var ret_addr = this.PC.asUInt32() + 8;
 		this.genRegisters[31].putUInt32(ret_addr);
 		this.doDelaySlot();
@@ -1899,7 +1907,7 @@ function MipsCpu () {
 	this.BEQL = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var offset = getSigned16(op&0x0000ffff);
+		var offset = getSigned16((op&0x0000ffff) * 4);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();
@@ -2404,28 +2412,28 @@ function MipsCpu () {
 
     this.TLBWI = function ( op ) {
         //DEBUG("TLBWI");
-        //console.log("TLBWI");
+        console.log("TLBWI");
         var c0registers = this.C0Registers;
         var index = c0registers[0].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
         var pagemask = c0registers[5].rawUInt32();
-        //console.log("index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
+        console.log("index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
         this.advancePC();
     }
 
     this.TLBWR = function ( op ) {
         //DEBUG("TLBWR");
-        //console.log("TLBWR");
+        console.log("TLBWR");
         var c0registers = this.C0Registers;
         var index = c0registers[1].asUInt32();
         var entryHi = c0registers[10].asUInt32();
         var entryLo0 = c0registers[2].asUInt32();
         var entryLo1 = c0registers[3].asUInt32();
         var pagemask = c0registers[5].asUInt32();
-        //console.log("wiredReg: " + c0registers[6].asUInt32() + ", index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
+        console.log("wiredReg: " + c0registers[6].asUInt32() + ", index: " + index + ", entryHi: " + entryHi.toString(16) + ", entryLo0: " + entryLo0.toString(16) + ", entryLo1: " + entryLo1.toString(16) + ", pagemask: " + pagemask.toString(16)); 
         this.mmu.writeTLBEntry(index, entryLo0, entryLo1, entryHi, pagemask);
         this.advancePC();
     }
