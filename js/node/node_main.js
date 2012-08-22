@@ -34,6 +34,9 @@ emu = 0;
 function reset() {
     emu = new Emulator()
     emu.serialLine = new node_serial();
+    emu.tryQuit = function (exitCode) {
+        process.exit(exitCode);
+    }
 }
 
 reset();

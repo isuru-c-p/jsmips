@@ -22,5 +22,10 @@ function Emulator() {
     }
     
     
+    this.tryQuit = function(exitCode) {
+        // this is empty. node or browser can override this if they want to quit
+        while(1) { ERROR("FAILED TO QUIT"); }    
+    }
+    
 
 }

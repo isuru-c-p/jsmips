@@ -20,7 +20,8 @@ runTest() {
     python ../tools/srecLoader.py $1 --setentry > /dev/null
     echo "starting $KERNEL"
     dbgsend "run"
-    if ! wait $NODE_PID ; then
+    time wait $NODE_PID
+    if [ $? -ne 0 ]; then
         echo "****Test failed!**** $KERNEL"
         exit 1
     fi

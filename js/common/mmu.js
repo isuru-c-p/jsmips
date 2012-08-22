@@ -340,6 +340,10 @@ function Mmu(size) {
         {
             this.uart.writeWord(address,val);
             return;
+        } 
+        
+        if(address == 0x80000000){
+            this.emu.tryQuit(value);
         }
 
         var addr = this.addressTranslation(address,1);
