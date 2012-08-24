@@ -23,36 +23,20 @@ char* itoa(unsigned int val, int base){
 
 
 void print(char * s){
-    
-    asm("move $a0,%0\n"
-        "li $v0 , 4\n"
-        "syscall\n"
-        : 
-        : "r" (s)
-        : "v0", "a0", "memory" );
-    
+    //TODO
 }
 
 
+unsigned int * terminate = (unsigned int *)0x80000000;
+
 void fail() {
     print("test failed!\n");
-    asm(
-    "li $v0 , 6\n"
-    "syscall\n"
-    : 
-    : 
-    : "v0" );
-    
+    *terminate = 1;    
 }
 
 void pass(){
     print("test passed!\n");
-    asm(
-    "li $v0 , 5\n"
-    "syscall\n"
-    : 
-    : 
-    : "v0" );
+    *terminate = 0;
 }
 
 void abort(){
@@ -60,9 +44,7 @@ void abort(){
 }
 
 void exit(int val){
-    if(val)
-        fail();
-    pass();
+    *terminate = val;
 }
 
 void kmain(void)
