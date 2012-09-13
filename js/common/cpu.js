@@ -432,6 +432,22 @@ function getSigned16 (value) {
 	return signedVal;
 }
 
+function getSigned18 (value) {
+	var sign = 0;
+	var signedVal = value;
+	
+	if((value << 14) < 0)
+	{
+		sign = 1;
+	}
+	
+	if(sign)
+	{
+		signedVal = /*0signedVal | 0xffff0000;//*/-((~(signedVal) + 1) & 0x0003ffff);
+	}
+	
+	return signedVal;
+}
 
 
 function MipsCpu () {
@@ -1863,27 +1879,17 @@ function MipsCpu () {
 	}		
 	
 	this.B = function ( op ) {
-		var offset = getSigned16((op & 0x0000ffff) * 4);
+		var offset = getSigned18((op & 0x0000ffff) * 4);
 		this.doDelaySlot();
 		//DEBUG("B");
 		this.PC.incr(offset);
 		this.advancePC();
 	}
 	
-	this.BAL = function ( op ){
-		var offset = getSigned16((op & 0x0000ffff) * 4);
-		var ret_addr = this.PC.asUInt32() + 8;
-		this.genRegisters[31].putUInt32(ret_addr);
-		this.doDelaySlot();
-		//DEBUG("BAL");
-		this.PC.putUInt32(this.PC.asUInt32() + offset);
-		this.advancePC();
-	}
-	
 	this.BEQ = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();
@@ -1907,7 +1913,7 @@ function MipsCpu () {
 	this.BEQL = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();
@@ -1930,7 +1936,7 @@ function MipsCpu () {
 	
 	this.BGEZ = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -1951,7 +1957,7 @@ function MipsCpu () {
 
 	this.BGEZAL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -1975,7 +1981,7 @@ function MipsCpu () {
 
 	this.BGEZALL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		var pc_val = this.PC.asUInt32();
@@ -1999,7 +2005,7 @@ function MipsCpu () {
 
 	this.BGEZL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		var pc_val = this.PC.asUInt32();
@@ -2021,7 +2027,7 @@ function MipsCpu () {
 	
 	this.BGTZ = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -2042,7 +2048,7 @@ function MipsCpu () {
 	
 	this.BGTZL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		if(rs_val > 0)
@@ -2063,7 +2069,7 @@ function MipsCpu () {
 	
 	this.BLEZ = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -2084,7 +2090,7 @@ function MipsCpu () {
 	
 	this.BLEZL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		if(rs_val <= 0)
@@ -2105,7 +2111,7 @@ function MipsCpu () {
 
 	this.BLTZ = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -2126,7 +2132,7 @@ function MipsCpu () {
 	
 	this.BLTZAL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		this.doDelaySlot();
@@ -2149,7 +2155,7 @@ function MipsCpu () {
 	
 	this.BLTZALL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		var pc_val = this.PC.asUInt32();
@@ -2173,7 +2179,7 @@ function MipsCpu () {
 
 	this.BLTZL = function ( op ) {
 		var rs = getRs(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		var rs_val = getSigned(this.genRegisters[rs].asUInt32());
 		
 		if(rs_val < 0)
@@ -2195,7 +2201,7 @@ function MipsCpu () {
 	this.BNE = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();
@@ -2219,7 +2225,7 @@ function MipsCpu () {
 	this.BNEL = function ( op ) {
 		var rs = getRs(op);
 		var rt = getRt(op);
-		var offset = getSigned16((op&0x0000ffff) * 4);
+		var offset = getSigned18((op&0x0000ffff) * 4);
 		
 		var rs_val = this.genRegisters[rs].asUInt32();
 		var rt_val = this.genRegisters[rt].asUInt32();

@@ -229,6 +229,10 @@ function Mmu(size) {
             {
                return va; 
             }
+            else if((top3 == 0x0) & (this.cpu.statusRegister.ERL == 1))
+            {
+                return va;
+            }
             // kseg3 in debug mode
             // TODO
             // kuseg (ERL=0), kseg2 and kseg3
@@ -342,10 +346,6 @@ function Mmu(size) {
             return;
         } 
         
-        if(address == 0x80000000){
-            this.emu.tryQuit(value);
-        }
-
         var addr = this.addressTranslation(address,1);
         //console.log("PA: " + addr.toString(16));
 		if(this.cpu.getEndianness() == 0)
